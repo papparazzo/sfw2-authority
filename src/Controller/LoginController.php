@@ -82,7 +82,7 @@ class LoginController extends AbstractController {
     public function logoff() {
         $this->user->reset();
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
-        $content = new Content('content/login/logoff');
+        $content = new Content('SFW2\\Authority\\login/logoff');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path'), '');
         return $content;
     }
