@@ -54,7 +54,7 @@ class LoginController extends AbstractController {
     }
 
     public function index($all = false) {
-        $content = new Content('SFW2\\Authority\\login/login');
+        $content = new Content('SFW2\\Authority\\Login\\Login');
         $content->assign('loginResetPath', $this->loginResetPath);
         $content->assign('isAllreadyLoggedIn', $this->user->isAuthenticated());
         $content->assign('firstname', $this->user->getFirstName());
@@ -82,7 +82,7 @@ class LoginController extends AbstractController {
     public function logoff() {
         $this->user->reset();
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
-        $content = new Content('SFW2\\Authority\\login/logoff');
+        $content = new Content('SFW2\\Authority\\Login\\Logoff');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path'), '');
         return $content;
     }

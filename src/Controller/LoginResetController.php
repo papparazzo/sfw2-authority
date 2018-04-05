@@ -54,7 +54,7 @@ class LoginResetController extends AbstractController {
     }
 
     public function index($all = false) {
-        $content = new Content('content/loginreset/loginreset');
+        $content = new Content('SFW2\\Authority\\LoginReset\\LoginReset');
         $content->assign('expire', $this->getExpireDate(self::EXPIRE_DATE_OFFSET));
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
 
