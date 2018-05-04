@@ -1,0 +1,18 @@
+<div class="alert alert-danger" role="alert">
+    <strong>Achtung: </strong>
+    Es konnte kein neues Passwort erzeugt werden!
+    Dies kann mehrere Ursachen haben:
+    <ul style="padding-left: 30px;">
+        <li>Es wurden ein ungültiger Hash übergeben.</li>
+        <li>Es wurde ein fehlerhafter Hash übergeben.</li>
+        <li>Das Ablaufdatum wurde überschritten. Bitte achte darauf das Du innerhalb von <?php echo($this->expire); ?> reagierst!</li>
+        <li>Es wurde bereits ein neues Passwort gesendet. Bitte Prüfe Dein E-Mail-Konto!</li>
+        <li>Es ist ein interner Fehler aufgetreten.</li>
+    </ul>
+    Versuche es bitte
+    <a
+        style="border-bottom: 1px dashed; color: #CD0A0A;"
+        href="?"
+    >erneut</a>.
+    Sollte das Problem weiterhin bestehen dann melde Dich bitte.
+</div>

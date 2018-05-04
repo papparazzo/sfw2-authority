@@ -1,0 +1,25 @@
+<div class="py-md-4 mx-auto" style="width: 35rem; padding-top: 3.5rem !important;">
+    <div class="card card-block" style="padding: .75rem 1.25rem; border: .0625rem solid #c6c8ca; background-color: #d6d8d9">
+        <h3 style="margin-bottom: 1.5rem;">Passwort rücksetzen</h3>
+        <p>
+            Bestätigungsnachricht wurde erfolgreich an
+            <strong><?php echo($this->name); ?></strong>
+            verschickt.
+        </p>
+        <p>
+            Bitte klicke auf den Bestätigungslink den Du per E-Mail erhälst
+            um Dein neues Passwort eingeben zu können.
+        </p>
+        <div class="alert alert-warning" role="alert">
+            Der Bestätigungslink ist <strong><?php echo($this->expire); ?></strong>
+            gültig. Solltest Du nicht innerhalb dieser Zeit auf den Link geklickt
+            haben so wird Deine Anfrage automatisch gelöscht und Du kannst kein
+            neues Passwort setzen!
+        </div>
+        <div class="modal-footer" style="border: 0; margin-top: 12px;">
+            <button type="button" class="btn btn-success btn-sm submit-form">
+                okay
+            </button>
+        </div>
+    </div>
+</div>
