@@ -58,7 +58,7 @@ class LoginController extends AbstractController {
         $content->assign('loginResetPath', $this->loginResetPath);
         $content->assign('isAllreadyLoggedIn', $this->user->isAuthenticated());
         $content->assign('firstname', $this->user->getFirstName());
-        $content->assign('lastPage', $this->session->getGlobalEntry('current_path'), '');
+        $content->assign('lastPage', (string)$this->session->getGlobalEntry('current_path'), '');
         return $content;
     }
 
