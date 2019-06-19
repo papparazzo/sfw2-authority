@@ -4,7 +4,7 @@
     "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
 
     "require": {
-        "php": "^7.0"
+        "php": "^7.2"
     },
     "autoload": {
         "psr-4": {
