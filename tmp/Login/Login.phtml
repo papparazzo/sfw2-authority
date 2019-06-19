@@ -19,7 +19,7 @@
  *
  */
 ?>
-<div class="modal fade" id="loginDialogModalCenter" tabindex="-1" role="dialog" aria-labelledby="acceptDialogModalCenter" aria-hidden="true">
+<div class="modal fade" id="loginDialogModalCenter" tabindex="-1" role="dialog" aria-labelledby="deleteDialogModal" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
             <div class="modal-header">
@@ -92,6 +92,7 @@
     <?php endif; ?>
 </div>
 <input type="hidden" id="lastPage" value="<?php echo($this->lastPage); ?>" />
+<?php //TODO: Move this into js-file ?>
 <script>
     $("#usr").focus();
     $('#usr').keyup(function(e) {

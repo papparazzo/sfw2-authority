@@ -63,11 +63,7 @@ class LoginController extends AbstractController {
     }
 
     public function authenticate() {
-        $error = false;
-        if(!$this->user->authenticateUser(filter_input(INPUT_POST, 'usr'), filter_input(INPUT_POST, 'pwd'))) {
-            $error = true;
-        }
-
+        $error = !$this->user->authenticateUser(filter_input(INPUT_POST, 'usr'), filter_input(INPUT_POST, 'pwd'));
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
         $this->session->regenerateSession();
 

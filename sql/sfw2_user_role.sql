@@ -9,8 +9,8 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 CREATE TABLE `sfw2_user_role` (
-  `UserId` int(10) UNSIGNED NOT NULL,
-  `RoleId` int(10) UNSIGNED NOT NULL
+    `UserId` int(10) UNSIGNED NOT NULL,
+    `RoleId` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE `sfw2_user_role`
