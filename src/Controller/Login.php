@@ -29,7 +29,7 @@ use SFW2\Authority\User;
 
 use SFW2\Core\Session;
 
-class LoginController extends AbstractController {
+class Login extends AbstractController {
 
     /**
      * @var \SFW2\Routing\User
