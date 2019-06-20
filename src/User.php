@@ -41,12 +41,12 @@ class User {
      */
     protected $database = null;
 
-    public function __construct(Database $database, $userId = 0) {
+    public function __construct(Database $database, int $userId = 0) {
         $this->database = $database;
-        $this->loadUserById($userId);
+        $this->loadUserById((int)$userId);
     }
 
-    public function loadUserById($userId) {
+    public function loadUserById(int $userId) : bool {
         if($userId == 0) {
             $this->reset();
             return true;
@@ -54,7 +54,7 @@ class User {
 
         $stmt =
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
-            "FROM `sfw2_user` " .
+            "FROM `{TABLE_PREFIX}_user` " .
             "WHERE `Id` = '%s' " .
             "AND `Active` = '1'";
 
@@ -73,46 +73,69 @@ class User {
         return $this->authenticated = true;
     }
 
-    public function authenticateUser($loginName, $pwd) {
+    public function authenticateUser(string $loginName, string $pwd) : bool {
         $this->reset();
         $stmt =
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin`, " .
-            "IF(CURRENT_TIMESTAMP > `LastTry` + POW(2, `Retries`) - 1, 1, 0) " .
-            "AS `OnTime` " .
-            "FROM `sfw2_user` " .
+            "IF(CURRENT_TIMESTAMP > `LastTry` + POW(2, `Retries`) - 1, 1, 0) AS `OnTime` " .
+            "FROM `{TABLE_PREFIX}_user` " .
             "WHERE `LoginName` LIKE '%s' " .
             "AND `Active` = '1'";
 
-        $rv = $this->database->select($stmt, [$loginName]);
+        $row = $this->database->selectRow($stmt, [$loginName]);
 
-        if(count($rv) != 1) {
+        if(empty($row)) {
             return false;
         }
 
-        $rv = $rv[0];
-        if($rv['OnTime'] == 0) {
+        if($row['OnTime'] == 0) {
             return false;
         }
 
-        if(!$this->checkPassword($rv['Id'], $rv['Password'], $pwd)) {
-            $this->updateRetries($loginName, false);
+        if(!$this->checkPassword($row['Id'], $row['Password'], $pwd)) {
+            $this->updateRetries($row['Id'], false);
             return false;
         }
 
-        $this->updateRetries($loginName, true);
+        $this->updateRetries($row['Id'], true);
 
-        $this->firstName = $rv['FirstName'];
-        $this->lastName  = $rv['LastName'];
-        $this->mailAddr  = $rv['Email'];
-        $this->userid    = $rv['Id'];
-        $this->isAdmin   = $rv['Admin'] == '1' ? true : false;
+        $this->firstName = $row['FirstName'];
+        $this->lastName  = $row['LastName'];
+        $this->mailAddr  = $row['Email'];
+        $this->userid    = $row['Id'];
+        $this->isAdmin   = $row['Admin'] == '1' ? true : false;
 
         return $this->authenticated = true;
     }
 
-    public function setPassword($userId, $password) {
+    public function authenticateUserByHash(string $hash) : bool {
+        $this->reset();
         $stmt =
-            "UPDATE `sfw2_user` " .
+            "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
+            "FROM `{TABLE_PREFIX}_user` " .
+            "WHERE `ResetExpireDate` >= NOW() " .
+            "AND `ResetHash` = '%s'";
+
+        $row = $this->database->selectRow($stmt, [$hash]);
+
+        if(empty($row)) {
+            return false;
+        }
+
+        $this->updateRetries($row['Id'], true);
+
+        $this->firstName = $row['FirstName'];
+        $this->lastName  = $row['LastName'];
+        $this->mailAddr  = $row['Email'];
+        $this->userid    = $row['Id'];
+        $this->isAdmin   = $row['Admin'] == '1' ? true : false;
+
+        return $this->authenticated = true;
+    }
+
+    public function setPassword(int $userId, string $password) : void {
+        $stmt =
+            "UPDATE `{TABLE_PREFIX}_user` " .
             "SET `Password` = '%s' " .
             "WHERE `Id` = '%s' ";
 
@@ -120,7 +143,7 @@ class User {
         $this->database->update($stmt, array($hash, $userId));
     }
 
-    public function reset($firstName = '', $lastName = '', $mailAddr = '') {
+    public function reset(string $firstName = '', string $lastName = '', string $mailAddr = '') : void {
         $this->authenticated = false;
         $this->firstName     = $firstName;
         $this->lastName      = $lastName;
@@ -129,27 +152,31 @@ class User {
         $this->isAdmin       = false;
     }
 
-    public function isAuthenticated() {
+    public function isAuthenticated() : bool {
         return $this->authenticated;
     }
 
-    public function getFirstName() {
+    public function getFirstName() : string {
         return $this->firstName;
     }
 
-    public function getLastName() {
+    public function getLastName() : string {
         return $this->lastName;
     }
 
-    public function getUserName() {
-        return mb_substr($this->firstName, 0, 1) . '. ' . $this->lastName;
+    public function getUserName() : string {
+        return $this->firstName[0] . '. ' . $this->lastName;
     }
 
-    public function getMailAddr() {
+    public function getFullName() : string {
+        return $this->firstName . ' ' . $this->lastName;
+    }
+
+    public function getMailAddr() : string {
         return $this->mailAddr;
     }
 
-    public function getUserId() {
+    public function getUserId() : int {
         return $this->userid;
     }
 
@@ -157,7 +184,7 @@ class User {
         return $this->isAdmin;
     }
 
-    protected function checkPassword($userId, $hash, $password) {
+    protected function checkPassword(int $userId, string $hash, string $password) : bool {
         if(!password_verify($password, $hash)) {
             return false;
         }
@@ -168,22 +195,20 @@ class User {
         return true;
     }
 
-    protected function updateRetries($loginName, $sucess) {
-        $stmt = "UPDATE `sfw2_user` ";
+    protected function updateRetries(int $loginId, bool $sucess) : void {
+        $stmt = "UPDATE `{TABLE_PREFIX}_user` ";
         if($sucess) {
-            $stmt .= "SET `Retries` = 0 ";
+            $stmt .= "SET `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = ''";
         } else {
             $stmt .=
-                "SET `Active` = IF(`Retries` + 1 < " .
-                self::MAX_RETRIES .  ", 1, 0), " .
-                "`Retries` = IF(`Retries` + 1 < " .
-                self::MAX_RETRIES .  ", `Retries` + 1, 0) ";
+                "SET `Active` = IF(`Retries` + 1 < " . self::MAX_RETRIES .  ", 1, 0), " .
+                "`Retries` = IF(`Retries` + 1 < " . self::MAX_RETRIES .  ", `Retries` + 1, 0) ";
         }
         $stmt .=
-            "WHERE `LoginName` = '%s' " .
+            "WHERE `Id` = '%s' " .
             "AND `Active` = 1 " .
             "AND CURRENT_TIMESTAMP > `LastTry` +  POW(2, `Retries`) - 1";
 
-        $this->database->update($stmt, array($loginName));
+        $this->database->update($stmt, [$loginId]);
     }
 }
