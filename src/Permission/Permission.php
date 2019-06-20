@@ -68,7 +68,7 @@ class Permission implements PermissionInterface {
 
         $stmt =
             "SELECT `RoleId` " .
-            "FROM `sfw2_user_role` " .
+            "FROM `{TABLE_PREFIX}_user_role` " .
             "WHERE `UserId` = '%s'";
 
         $rows = $this->database->select($stmt, [$this->user->getUserId()]);
@@ -84,7 +84,7 @@ class Permission implements PermissionInterface {
     protected function getInitPermission() {
         $stmt =
            "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
-           "FROM `sfw2_permission` " .
+           "FROM `{TABLE_PREFIX}_permission` " .
            "WHERE `PathId` = '0' " .
            "AND `RoleId` IN(%s) " .
            "GROUP BY `RoleId`";
@@ -100,8 +100,8 @@ class Permission implements PermissionInterface {
         }
 
         $stmt =
-            "SELECT `sfw2_path`.`Id` " .
-            "FROM `sfw2_path` " .
+            "SELECT `Id` " .
+            "FROM `{TABLE_PREFIX}_path` " .
             "WHERE `ParentPathId` = '%s'";
 
         $rows = $this->database->select($stmt, [$parentPathId]);
@@ -109,7 +109,7 @@ class Permission implements PermissionInterface {
         foreach($rows as $row) {
             $stmt =
                 "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
-                "FROM `sfw2_permission` " .
+                "FROM `{TABLE_PREFIX}_permission` " .
                 "WHERE `PathId` = '%s' " .
                 "AND `RoleId` IN(%s) " .
                 "GROUP BY `RoleId`";
@@ -153,6 +153,7 @@ class Permission implements PermissionInterface {
                 return $this->getPagePermission($pathId)->deleteOwnAllowed();
 
             case 'index':
+            case 'read':
             default:
                 return $this->getPagePermission($pathId)->readOwnAllowed();
         }
@@ -174,6 +175,7 @@ class Permission implements PermissionInterface {
                 return $this->getPagePermission($pathId)->deleteAllAllowed();
 
             case 'index':
+            case 'read':
             default:
                 return $this->getPagePermission($pathId)->readAllAllowed();
         }
