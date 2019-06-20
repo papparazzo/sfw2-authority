@@ -54,6 +54,7 @@ class Login extends AbstractController {
     }
 
     public function index($all = false) {
+        unset($all);
         $content = new Content('SFW2\\Authority\\Login\\Login');
         $content->assign('loginResetPath', $this->loginResetPath);
         $content->assign('isAllreadyLoggedIn', $this->user->isAuthenticated());
