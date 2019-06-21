@@ -41,6 +41,9 @@ class Login extends AbstractController {
      */
     protected $session;
 
+    /**
+     * @var string
+     */
     protected $loginResetPath = '';
 
     public function __construct(int $pathId, PathMap $path, User $user, Session $session, $loginResetPathId = null) {
