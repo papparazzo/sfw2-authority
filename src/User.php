@@ -133,14 +133,27 @@ class User {
         return $this->authenticated = true;
     }
 
-    public function setPassword(int $userId, string $password) : void {
+    public function resetPassword(string $oldPwd, string $newPwd) : bool {
         $stmt =
             "UPDATE `{TABLE_PREFIX}_user` " .
-            "SET `Password` = '%s' " .
-            "WHERE `Id` = '%s' ";
+            "SET `Password` = '%s' `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
+            "WHERE `Id` = '%s' AND `Password` = '%s' ";
 
-        $hash = password_hash($password, PASSWORD_DEFAULT);
-        $this->database->update($stmt, array($hash, $userId));
+        $oldHash = password_hash($oldPwd, PASSWORD_DEFAULT);
+        $newHash = password_hash($newPwd, PASSWORD_DEFAULT);
+        $cnt = $this->database->update($stmt, [$newHash, $this->userId, $oldHash]);
+        return $cnt == 1;
+    }
+
+    public function resetPasswordByHash(string $hash, string $newPwd) : bool {
+        $stmt =
+            "UPDATE `{TABLE_PREFIX}_user` " .
+            "SET `Password` = '%s', `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
+            "WHERE `ResetExpireDate` >= NOW() AND `ResetHash` = '%s' AND `Id` = '%s'";
+
+        $newHash = password_hash($newPwd, PASSWORD_DEFAULT);
+        $cnt = $this->database->update($stmt, [$newHash, $oldHash, $this->userId]);
+        return $cnt == 1;
     }
 
     public function reset(string $firstName = '', string $lastName = '', string $mailAddr = '') : void {
