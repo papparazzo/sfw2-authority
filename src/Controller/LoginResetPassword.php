@@ -32,14 +32,11 @@ use SFW2\Core\Session;
 
 use SFW2\Authority\User;
 
+use SFW2\Authority\Helper\LoginHelperTrait;
+
 class LoginResetPassword extends AbstractController {
 
-    const EXPIRE_DATE_OFFSET = 86400; #24 * 60 * 60;
-
-    const STATE_START = 'start';
-    const STATE_SEND  = 'send';
-    const STATE_OK    = 'ok';
-    const STATE_ERROR = 'error';
+    use LoginHelperTrait;
 
     /**
      * @var \SFW2\Routing\User
@@ -56,11 +53,19 @@ class LoginResetPassword extends AbstractController {
      */
     protected $session;
 
-    public function __construct(int $pathId, Database $database, User $user, Session $session) {
+    /**
+     * @var string
+     */
+    protected $loginChangePath = '';
+
+    public function __construct(int $pathId, PathMap $path, Database $database, User $user, Session $session, $loginChangePathId = null) {
         parent::__construct($pathId);
         $this->database = $database;
         $this->user = $user;
         $this->session = $session;
+        if($loginChangePathId != null) {
+            $this->loginChangePath = $path->getPath($loginChangePathId);
+        }
     }
 
     public function index($all = false) : Content {
@@ -110,12 +115,12 @@ class LoginResetPassword extends AbstractController {
 /*
         $mail = new SFW_Mailer();
         $mail->confirmPasswordReset($addr, $uname, $hash);
+        $this->loginChangePath?do=confirm&hash=$hash;
  */
-        $content->assign('expire', $this->getExpireDate(self::EXPIRE_DATE_OFFSET));
+        $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
         $content->assign('name', $uname . ' (' . $addr . ')');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
         return $content;
-
     }
 
     protected function getHash(string $user, string $addr) : string {
@@ -133,14 +138,5 @@ class LoginResetPassword extends AbstractController {
         }
 
         return $hash;
-    }
-
-    protected function getExpireDate($date) {
-        return intval($date / 60 / 60) . ' Stunden';
-    }
-
-    protected function getMySQLExpireDate() {
-        $time = time() + self::EXPIRE_DATE_OFFSET;
-        return date('Y-m-d H:i:s', $time);
     }
 }

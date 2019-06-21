@@ -27,9 +27,12 @@ use SFW2\Routing\Result\Content;
 use SFW2\Routing\PathMap\PathMap;
 use SFW2\Authority\User;
 
+use SFW2\Authority\Helper\LoginHelperTrait;
 use SFW2\Core\Session;
 
 class LoginChangePassword extends AbstractController {
+
+    use LoginHelperTrait;
 
     /**
      * @var \SFW2\Routing\User
@@ -53,15 +56,25 @@ class LoginChangePassword extends AbstractController {
     }
 
     public function index($all = false) : Content {
-        $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
-        return $content;
+        unset($all);
 
+        if($this->user->isAuthenticated()) {
+
+        }
+
+
+
+
+        $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
+        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+        return $content;
     }
 
 
     public function changePassword() : Content {
-        $content = new Content('SFW2\\Authority\\LoginReset\\ChangePassword');
-        return $content;
+#        $content = new Content('SFW2\\Authority\\LoginChangePassword\\InsertPassword');
+#        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+#        return $content;
     }
 
 
@@ -72,15 +85,14 @@ class LoginChangePassword extends AbstractController {
         $this->session->regenerateSession();
 
         if($error) {
-            $content = new Content('SFW2\\Authority\\LoginReset\\ResetError');
-            $content->assign('user', $this->user->getFirstName());
-            $content->assign('expire', $this->getExpireDate(self::EXPIRE_DATE_OFFSET));
+            $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
+            $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
             $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
             return $content;
         }
-        return $this->changePassword();
+
+        #$content->assign('user', $this->user->getFirstName());
+
+        #return $this->changePassword();
     }
-
-
-
 }
