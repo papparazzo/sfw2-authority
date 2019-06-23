@@ -202,8 +202,10 @@ class User {
             return false;
         }
 
-        if(!password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-            $this->setPassword($userId, $password);
+        if(password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+            $stmt = "UPDATE `{TABLE_PREFIX}_user` SET `Password` = '%s' WHERE `Id` = '%s' ";
+            $newh = password_hash($password, PASSWORD_DEFAULT);
+            $this->database->update($stmt, [$newh, $userId]);
         }
         return true;
     }
