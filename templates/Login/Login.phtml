@@ -38,7 +38,7 @@
 <div class="py-md-4 mx-auto" style="width: 35rem; padding-top: 3.5rem !important;">
     <?php if($this->isAllreadyLoggedIn): ?>
     <div class="alert alert-warning" role="alert">
-        <strong>Hinweis: </strong> Du bist bereits als <strong><?php echo($this->firstname); ?></strong>
+        <strong>Anmerkung</strong> Du bist bereits als <strong><?php echo($this->firstname); ?></strong>
         angemeldet. Wenn Du Dich abmelden möchtest klicke bitte oben rechts auf <strong>abmelden</strong>.
     </div>
     <?php else:?>
@@ -136,7 +136,7 @@
         }
 
         $('#firstName').html(data.data.user);
-        $('#loginDialogModalCenter').modal({show: true})
+        $('#loginDialogModalCenter').modal({show: true});
         $('#btnLoginSuccess').click(returnToOrigin);
     }
 
