@@ -24,6 +24,7 @@ namespace SFW2\Authority\Controller;
 
 use SFW2\Routing\AbstractController;
 use SFW2\Routing\Result\Content;
+use SFW2\Routing\PathMap\PathMap;
 
 use SFW2\Core\DataValidator;
 use SFW2\Core\Database;

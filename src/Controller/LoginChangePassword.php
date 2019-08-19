@@ -25,9 +25,11 @@ namespace SFW2\Authority\Controller;
 use SFW2\Routing\AbstractController;
 use SFW2\Routing\Result\Content;
 use SFW2\Routing\PathMap\PathMap;
-use SFW2\Authority\User;
 
+use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
+
+use SFW2\Core\DataValidator;
 use SFW2\Core\Session;
 
 class LoginChangePassword extends AbstractController {
@@ -58,41 +60,97 @@ class LoginChangePassword extends AbstractController {
     public function index($all = false) : Content {
         unset($all);
 
-        if($this->user->isAuthenticated()) {
-
+        if(!$this->user->isAuthenticated()) {
+            $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangeError');
+            return $content;
         }
-
-
-
 
         $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+        $content->assign('byHash', false);
         return $content;
     }
 
-
-    public function changePassword() : Content {
-#        $content = new Content('SFW2\\Authority\\LoginChangePassword\\InsertPassword');
-#        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
-#        return $content;
-    }
-
-
     public function confirm() : Content {
-        $error = !$this->user->authenticateUserByHash((string)filter_input(INPUT_GET, 'hash'));
+        $hash = (string)filter_input(INPUT_GET, 'hash');
+        $error = !$this->user->authenticateUserByHash($hash);
 
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
         $this->session->regenerateSession();
 
         if($error) {
-            $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
-            $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
-            $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+      #      $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
+      #      $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
+      #      return $content;
+        }
+
+        $this->session->setPathEntry('hash', $hash);
+        $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
+        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+        $content->assign('byHash', true);
+        return $content;
+    }
+
+    public function changePassword() : Content {
+        $content = new Content();
+
+        $changeByHash = (bool)filter_input(INPUT_POST, 'hash');
+
+        if(!$changeByHash && !$this->user->isAuthenticated()) {
+            $content->setError(true);
             return $content;
         }
 
-        #$content->assign('user', $this->user->getFirstName());
+        if($changeByHash && !$this->session->isPathEntrySet('hash')) {
+            $values['pwd']['hint'] = ' ';
+            $values['pwdr']['hint'] = 'Das Ändern des Passwortes schlug fehl!';
+            $content->assignArray($values);
+            $content->setError(true);
+            return $content;
+        }
 
-        #return $this->changePassword();
+        $rulset = [
+            'pwd' => ['isNotEmpty'],
+            'pwdr' => ['isNotEmpty'],
+        ];
+
+        if($changeByHash) {
+            $rulset['oldpwd'] = ['isNotEmpty'];
+        }
+
+        $values = [];
+
+        $validator = new DataValidator($rulset);
+        $error = !$validator->validate($_POST, $values);
+
+        if($error) {
+            $content->setError(true);
+            $content->assignArray($values);
+            return $content;
+        }
+
+        #$user = $values['pwd']['value'];
+        #$addr = $values['pwdr']['value'];
+
+        $newPwd;
+
+        if($changeByHash) {
+            $hash = $this->session->getPathEntry('hash');
+            $this->session->delPathEntry('hash');
+            $error = !$this->user->resetPasswordByHash($hash, $newPwd);
+        } else {
+            $oldPwd = $values['oldpwd']['value'];
+            $error = !$this->user->resetPassword($oldPwd, $newPwd);
+        }
+
+        if($error) {
+
+
+            $content->setError(true);
+            $content->assignArray($values);
+        }
+
+        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+        return $content;
     }
 }
