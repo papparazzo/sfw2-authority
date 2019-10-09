@@ -29,7 +29,11 @@ use SFW2\Routing\PathMap\PathMap;
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
 
-use SFW2\Core\DataValidator;
+use SFW2\Validator\Ruleset;
+use SFW2\Validator\Validator;
+use SFW2\Validator\Validators\IsNotEmpty;
+use SFW2\Validator\Validators\IsSameAs;
+
 use SFW2\Core\Session;
 
 class LoginChangePassword extends AbstractController {
@@ -67,7 +71,7 @@ class LoginChangePassword extends AbstractController {
 
         $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
-        $content->assign('byHash', false);
+        $content->assign('hash', '');
         return $content;
     }
 
@@ -79,48 +83,42 @@ class LoginChangePassword extends AbstractController {
         $this->session->regenerateSession();
 
         if($error) {
-      #      $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
-      #      $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
-      #      return $content;
+            $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
+            $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
+            return $content;
         }
 
         $this->session->setPathEntry('hash', $hash);
         $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
-        $content->assign('byHash', true);
+        $content->assign('hash', $hash);
         return $content;
     }
 
     public function changePassword() : Content {
         $content = new Content();
 
-        $changeByHash = (bool)filter_input(INPUT_POST, 'hash');
+        $hash = filter_input(INPUT_POST, 'hash');
 
-        if(!$changeByHash && !$this->user->isAuthenticated()) {
-            $content->setError(true);
-            return $content;
+        if($hash == '' && !$this->user->isAuthenticated()) {
+            return $this->returnError();
         }
 
-        if($changeByHash && !$this->session->isPathEntrySet('hash')) {
-            $values['pwd']['hint'] = ' ';
-            $values['pwdr']['hint'] = 'Das Ändern des Passwortes schlug fehl!';
-            $content->assignArray($values);
-            $content->setError(true);
-            return $content;
+        if($hash != '' && $this->session->getPathEntry('hash', '') != $hash) {
+            return $this->returnError();
         }
 
-        $rulset = [
-            'pwd' => ['isNotEmpty'],
-            'pwdr' => ['isNotEmpty'],
-        ];
+        $rulset = new Ruleset();
+        $rulset->addNewRules('pwd', new IsNotEmpty(), new IsSameAs($_POST['pwdr']));
+        $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
 
-        if($changeByHash) {
-            $rulset['oldpwd'] = ['isNotEmpty'];
+        if($hash == '') {
+            $rulset->addNewRules('oldpwd', new IsNotEmpty());
         }
 
+        $validator = new Validator($rulset);
         $values = [];
 
-        $validator = new DataValidator($rulset);
         $error = !$validator->validate($_POST, $values);
 
         if($error) {
@@ -129,28 +127,41 @@ class LoginChangePassword extends AbstractController {
             return $content;
         }
 
-        #$user = $values['pwd']['value'];
-        #$addr = $values['pwdr']['value'];
-
-        $newPwd;
-
-        if($changeByHash) {
-            $hash = $this->session->getPathEntry('hash');
-            $this->session->delPathEntry('hash');
-            $error = !$this->user->resetPasswordByHash($hash, $newPwd);
-        } else {
+        $newPwd = $values['pwd']['value'];
+        if($hash == '') {
             $oldPwd = $values['oldpwd']['value'];
             $error = !$this->user->resetPassword($oldPwd, $newPwd);
+        } else {
+            $this->session->delPathEntry('hash');
+            $error = !$this->user->resetPasswordByHash($newPwd);
         }
 
         if($error) {
-
-
-            $content->setError(true);
-            $content->assignArray($values);
+            return $this->returnError();
         }
 
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
+        return $content;
+    }
+
+    protected function returnError() : Content {
+        $content = new Content();
+        $values = [
+            'oldpwd' => [
+                'hint' => ' ',
+                'value' => ''
+            ],
+            'pwd' => [
+                'hint' => ' ',
+                'value' => ''
+            ],
+            'pwdr' => [
+                'hint' => 'Das Ändern des Passwortes schlug fehl!',
+                'value' => ''
+            ]
+        ];
+        $content->assignArray($values);
+        $content->setError(true);
         return $content;
     }
 }

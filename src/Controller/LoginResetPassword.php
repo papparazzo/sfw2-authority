@@ -26,10 +26,15 @@ use SFW2\Routing\AbstractController;
 use SFW2\Routing\Result\Content;
 use SFW2\Routing\PathMap\PathMap;
 
-use SFW2\Core\DataValidator;
+use SFW2\Validator\Ruleset;
+use SFW2\Validator\Validator;
+use SFW2\Validator\Validators\IsNotEmpty;
+use SFW2\Validator\Validators\IsEMailAddress;
+
 use SFW2\Core\Database;
 use SFW2\Core\Helper;
 use SFW2\Core\Session;
+use SFW2\Core\View;
 
 use SFW2\Authority\User;
 
@@ -79,17 +84,16 @@ class LoginResetPassword extends AbstractController {
     public function request() : Content {
         $content = new Content('SFW2\\Authority\\LoginReset\\SendSuccess');
 
-        $rulset = [
-            'user' => ['isNotEmpty'],
-            'addr' => ['isNotEmpty', 'isEMailAddress'],
-        ];
+        $rulset = new Ruleset();
+        $rulset->addNewRules('user', new IsNotEmpty());
+        $rulset->addNewRules('addr', new IsNotEmpty(), new IsEMailAddress());
 
+        $validator = new Validator($rulset);
         $values = [];
 
-        $validator = new DataValidator($rulset);
-        $error = $validator->validate($_POST, $values);
+        $error = !$validator->validate($_POST, $values);
 
-        if(!$error) {
+        if($error) {
             $content->setError(true);
             $content->assignArray($values);
             return $content;
@@ -113,11 +117,22 @@ class LoginResetPassword extends AbstractController {
             "WHERE `Email` = '%s' AND `LoginName` = '%s'";
 
         $uname = $this->database->selectSingle($stmt, [$addr, $user]);
-/*
-        $mail = new SFW_Mailer();
-        $mail->confirmPasswordReset($addr, $uname, $hash);
-        $this->loginChangePath?do=confirm&hash=$hash;
- */
+
+        $view = new View(__DIR__ . '/../../templates/confirmpwdreset.phtml');
+        $view->assign('name', $uname);
+        $view->assign('hash', $hash);
+        $view->assign('path',
+            'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash"
+        );
+
+        $header = [
+            'From:webmaster <webmaster@vfvconcordia.de>',
+            'MIME-Version: 1.0',
+            'Content-Type:text/html; charset=utf-8',
+            'Content-Transfer-Encoding: 8bit'
+        ];
+        mail($addr, 'Passwort vergessen', $view->getContent(), implode("\r\n", $header));
+
         $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
         $content->assign('name', $uname . ' (' . $addr . ')');
         $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));

@@ -135,24 +135,26 @@ class User {
 
     public function resetPassword(string $oldPwd, string $newPwd) : bool {
         $stmt =
-            "UPDATE `{TABLE_PREFIX}_user` " .
-            "SET `Password` = '%s' `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
-            "WHERE `Id` = '%s' AND `Password` = '%s' ";
+            "SELECT `Password` " .
+            "FROM `{TABLE_PREFIX}_user` " .
+            "WHERE `Id` = '%s'";
 
-        $oldHash = password_hash($oldPwd, PASSWORD_DEFAULT);
-        $newHash = password_hash($newPwd, PASSWORD_DEFAULT);
-        $cnt = $this->database->update($stmt, [$newHash, $this->userId, $oldHash]);
-        return $cnt == 1;
+        $oldPwdHash = $this->database->selectSingle($stmt, [$this->userid]);
+
+        if(!$this->checkPassword($this->userid, $oldPwdHash, $oldPwd)) {
+            return false;
+        }
+        return $this->resetPasswordByHash($newPwd);
     }
 
-    public function resetPasswordByHash(string $hash, string $newPwd) : bool {
+    public function resetPasswordByHash(string $newPwd) : bool {
         $stmt =
             "UPDATE `{TABLE_PREFIX}_user` " .
             "SET `Password` = '%s', `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
-            "WHERE `ResetExpireDate` >= NOW() AND `ResetHash` = '%s' AND `Id` = '%s'";
+            "WHERE `Id` = '%s'";
 
         $newHash = password_hash($newPwd, PASSWORD_DEFAULT);
-        $cnt = $this->database->update($stmt, [$newHash, $oldHash, $this->userId]);
+        $cnt = $this->database->update($stmt, [$newHash, $this->userid]);
         return $cnt == 1;
     }
 
