@@ -77,7 +77,6 @@ class LoginResetPassword extends AbstractController {
     public function index($all = false) : Content {
         unset($all);
         $content = new Content('SFW2\\Authority\\LoginReset\\LoginReset');
-        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
         return $content;
     }
 
@@ -135,7 +134,6 @@ class LoginResetPassword extends AbstractController {
 
         $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
         $content->assign('name', $uname . ' (' . $addr . ')');
-        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
         return $content;
     }
 

@@ -70,7 +70,6 @@ class LoginChangePassword extends AbstractController {
         }
 
         $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
-        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
         $content->assign('hash', '');
         return $content;
     }
@@ -90,7 +89,6 @@ class LoginChangePassword extends AbstractController {
 
         $this->session->setPathEntry('hash', $hash);
         $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
-        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
         $content->assign('hash', $hash);
         return $content;
     }
@@ -140,7 +138,6 @@ class LoginChangePassword extends AbstractController {
             return $this->returnError();
         }
 
-        $content->assign('lastPage', $this->session->getGlobalEntry('current_path', ''));
         return $content;
     }
 
