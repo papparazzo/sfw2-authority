@@ -76,12 +76,11 @@ class LoginResetPassword extends AbstractController {
 
     public function index($all = false) : Content {
         unset($all);
-        $content = new Content('SFW2\\Authority\\LoginReset\\LoginReset');
-        return $content;
+        return new Content();
     }
 
     public function request() : Content {
-        $content = new Content('SFW2\\Authority\\LoginReset\\SendSuccess');
+        $content = new Content();
 
         $rulset = new Ruleset();
         $rulset->addNewRules('user', new IsNotEmpty());
