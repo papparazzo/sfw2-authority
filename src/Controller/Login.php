@@ -56,7 +56,7 @@ class Login extends AbstractController {
         }
     }
 
-    public function index($all = false) {
+    public function index(bool $all = false) : Content {
         unset($all);
         $error = !$this->user->authenticateUser(
             (string)filter_input(INPUT_POST, 'usr'),
@@ -70,7 +70,7 @@ class Login extends AbstractController {
         return $content;
     }
 
-    public function logoff() {
+    public function logoff() : Content {
         $this->user->reset();
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
         return new Content();
