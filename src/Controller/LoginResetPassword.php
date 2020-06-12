@@ -74,7 +74,7 @@ class LoginResetPassword extends AbstractController {
         }
     }
 
-    public function index($all = false) : Content {
+    public function index(bool $all = false) : Content {
         unset($all);
         return new Content();
     }
