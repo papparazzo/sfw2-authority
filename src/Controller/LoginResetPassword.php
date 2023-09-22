@@ -47,12 +47,12 @@ class LoginResetPassword extends AbstractController {
     /**
      * @var \SFW2\Routing\User
      */
-    protected $user;
+    protected \SFW2\Routing\User|User $user;
 
     /**
      * @var SFW2\Core\Database
      */
-    protected $database;
+    protected Database|SFW2\Core\Database $database;
 
     /**
      * @var \SFW2\Core\Session
