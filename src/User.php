@@ -195,7 +195,7 @@ class User {
         return $this->userid;
     }
 
-    public function isAdmin() {
+    public function isAdmin(): bool {
         return $this->isAdmin;
     }
 
