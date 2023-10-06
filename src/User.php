@@ -110,7 +110,7 @@ class User {
 
     public function authenticateUserByHash(string $hash) : bool {
         $this->reset();
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
             "FROM `{TABLE_PREFIX}_user` " .
             "WHERE `ResetExpireDate` >= NOW() " .
