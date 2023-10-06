@@ -24,17 +24,17 @@ namespace SFW2\Authority\Helper;
 
 trait LoginHelperTrait {
 
-    private static $EXPIRE_DATE_OFFSET = 86400; #24 * 60 * 60;
+    private static int $EXPIRE_DATE_OFFSET = 86400; #24 * 60 * 60;
 
-    protected function getExpireDateOffset() {
+    protected function getExpireDateOffset(): int {
         return self::$EXPIRE_DATE_OFFSET;
     }
 
-    protected function getExpireDate($date) {
+    protected function getExpireDate($date): string {
         return intval($date / 60 / 60) . ' Stunden';
     }
 
-    protected function getMySQLExpireDate() {
+    protected function getMySQLExpireDate(): string {
         $time = time() + self::$EXPIRE_DATE_OFFSET;
         return date('Y-m-d H:i:s', $time);
     }
