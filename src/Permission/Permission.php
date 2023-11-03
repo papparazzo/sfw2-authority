@@ -22,35 +22,26 @@
 
 namespace SFW2\Authority\Permission;
 
+use SFW2\Authority\Helper\PagePermission;
 use SFW2\Core\Database;
 use SFW2\Core\Permission\PermissionInterface;
-use SFW2\Core\Permission\PagePermission;
 use SFW2\Authority\User;
 
 class Permission implements PermissionInterface {
 
-    protected $permission = [];
+    protected array $permission = [];
+
+    protected Database $database;
+
+    protected User $user;
+
+    protected array $permissions = [];
+
+    protected array $roles = [];
 
     /**
-     * @var \SFW2\Core\Database
+     * @throws PermissionException
      */
-    protected $database = null;
-
-    /**
-     * @var \SFW2\Authority\User
-     */
-    protected $user = null;
-
-    /**
-     * @var Array
-     */
-    protected $permissions = [];
-
-    /**
-     * @var Array
-     */
-    protected $roles = [];
-
     public function __construct(Database $database, User $user) {
         $this->user = $user;
         $this->database = $database;
@@ -61,7 +52,10 @@ class Permission implements PermissionInterface {
         $this->loadPermissions(0, $this->getInitPermission());
     }
 
-    protected function loadRoles() {
+    /**
+     * @throws PermissionException
+     */
+    protected function loadRoles(): void {
         if($this->user->isAdmin()) {
             return;
         }
@@ -94,7 +88,7 @@ class Permission implements PermissionInterface {
         return $permission;
     }
 
-    protected function loadPermissions(int $parentPathId, $initPermission) {
+    protected function loadPermissions(int $parentPathId, $initPermission): void {
         if($this->user->isAdmin()) {
             return;
         }
@@ -126,7 +120,7 @@ class Permission implements PermissionInterface {
         }
     }
 
-    public function getPagePermission($pathId) : PagePermission {
+    public function getPagePermission($pathId): PagePermission {
         if($this->user->isAdmin()) {
             return (new PagePermission())->setAllPermissions();
         }
@@ -137,47 +131,29 @@ class Permission implements PermissionInterface {
         return $this->permissions[$pathId];
     }
 
-    public function getActionPermission($pathId, $action = 'index') : bool {
+    public function getActionPermission($pathId, $action = 'index'): bool {
         if($this->user->isAdmin()) {
             return true;
         }
 
-        switch($action) {
-            case 'create':
-                return $this->getPagePermission($pathId)->createAllowed();
-
-            case 'update':
-                return $this->getPagePermission($pathId)->updateOwnAllowed();
-
-            case 'delete':
-                return $this->getPagePermission($pathId)->deleteOwnAllowed();
-
-            case 'index':
-            case 'read':
-            default:
-                return $this->getPagePermission($pathId)->readOwnAllowed();
-        }
+        return match ($action) {
+            'create' => $this->getPagePermission($pathId)->createAllowed(),
+            'update' => $this->getPagePermission($pathId)->updateOwnAllowed(),
+            'delete' => $this->getPagePermission($pathId)->deleteOwnAllowed(),
+            default => $this->getPagePermission($pathId)->readOwnAllowed(),
+        };
     }
 
-    public function hasFullActionPermission($pathId, $action = 'index') : bool {
+    public function hasFullActionPermission($pathId, $action = 'index'): bool {
         if($this->user->isAdmin()) {
             return true;
         }
 
-        switch($action) {
-            case 'create':
-                return $this->getPagePermission($pathId)->createAllowed();
-
-            case 'update':
-                return $this->getPagePermission($pathId)->updateAllAllowed();
-
-            case 'delete':
-                return $this->getPagePermission($pathId)->deleteAllAllowed();
-
-            case 'index':
-            case 'read':
-            default:
-                return $this->getPagePermission($pathId)->readAllAllowed();
-        }
+        return match ($action) {
+            'create' => $this->getPagePermission($pathId)->createAllowed(),
+            'update' => $this->getPagePermission($pathId)->updateAllAllowed(),
+            'delete' => $this->getPagePermission($pathId)->deleteAllAllowed(),
+            default => $this->getPagePermission($pathId)->readAllAllowed(),
+        };
     }
 }
