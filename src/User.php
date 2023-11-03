@@ -28,13 +28,13 @@ class User {
 
     const MAX_RETRIES = 100;
 
-    protected $userid        = 0;
-    protected $isAdmin       = false;
-    protected $firstName     = '';
-    protected $lastName      = '';
-    protected $mailAddr      = '';
+    protected int $userid         = 0;
+    protected bool $isAdmin       = false;
+    protected string $firstName   = '';
+    protected string $lastName    = '';
+    protected string $mailAddr    = '';
 
-    protected $authenticated = false;
+    protected bool $authenticated = false;
 
     /**
      * @var \SFW2\Core\Database
