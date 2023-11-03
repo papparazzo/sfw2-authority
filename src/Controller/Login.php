@@ -22,32 +22,22 @@
 
 namespace SFW2\Authority\Controller;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\Result\Content;
-use SFW2\Routing\PathMap\PathMap;
 use SFW2\Authority\User;
-
-use SFW2\Core\Session;
+use SFW2\Routing\ResponseEngine;
+use SFW2\Session\SessionInterface;
 
 class Login extends AbstractController {
 
-    /**
-     * @var \SFW2\Routing\User
-     */
-    protected $user;
+    protected User $user;
 
-    /**
-     * @var \SFW2\Core\Session
-     */
-    protected $session;
+    protected SessionInterface $session;
 
-    /**
-     * @var string
-     */
-    protected $loginResetPath = '';
+    protected string $loginResetPath = '';
 
-    public function __construct(int $pathId, PathMap $path, User $user, Session $session, $loginResetPathId = null) {
-        parent::__construct($pathId);
+    public function __construct(PathMap $path, User $user, SessionInterface $session, $loginResetPathId = null) {
         $this->user = $user;
         $this->session = $session;
 
@@ -56,8 +46,8 @@ class Login extends AbstractController {
         }
     }
 
-    public function index(bool $all = false) : Content {
-        unset($all);
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
         $error = !$this->user->authenticateUser(
             (string)filter_input(INPUT_POST, 'usr'),
             (string)filter_input(INPUT_POST, 'pwd')
@@ -65,14 +55,16 @@ class Login extends AbstractController {
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
         $this->session->regenerateSession();
 
-        $content = new Content('', $error);
-        $content->assign('user', $this->user->getFirstName());
-        return $content;
+        #$content = new Content('', $error);
+        #$content->assign('user', $this->user->getFirstName());
+
+        return $responseEngine->render($request, '');
     }
 
-    public function logoff() : Content {
+    public function logoff(Request $request, ResponseEngine $responseEngine): Response
+    {
         $this->user->reset();
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
-        return new Content();
+        return $responseEngine->render($request, '');
     }
 }
