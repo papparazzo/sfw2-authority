@@ -22,38 +22,33 @@
 
 namespace SFW2\Authority\Controller;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\Result\Content;
 use SFW2\Routing\PathMap\PathMap;
 
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
 
+use SFW2\Routing\ResponseEngine;
+use SFW2\Session\SessionInterface;
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Validator\Validators\IsSameAs;
 
-use SFW2\Core\Session;
 
 class LoginChangePassword extends AbstractController {
 
     use LoginHelperTrait;
 
-    /**
-     * @var \SFW2\Routing\User
-     */
-    protected $user;
+    protected User $user;
 
-    /**
-     * @var \SFW2\Core\Session
-     */
-    protected $session;
+    protected SessionInterface $session;
 
     protected $loginResetPath = '';
 
-    public function __construct(int $pathId, PathMap $path, User $user, Session $session, $loginResetPathId = null) {
-        parent::__construct($pathId);
+    public function __construct(PathMap $path, User $user, SessionInterface $session, $loginResetPathId = null) {
         $this->user = $user;
         $this->session = $session;
 
@@ -61,20 +56,21 @@ class LoginChangePassword extends AbstractController {
         }
     }
 
-    public function index($all = false) : Content {
-        unset($all);
-
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
         if(!$this->user->isAuthenticated()) {
-            $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangeError');
-            return $content;
+           # $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangeError');
+           return $responseEngine->render($request, '');
         }
 
-        $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
-        $content->assign('hash', '');
-        return $content;
+        #$content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
+        #$content->assign('hash', '');
+
+        return $responseEngine->render($request, '');
     }
 
-    public function confirm() : Content {
+    public function confirm(Request $request, ResponseEngine $responseEngine): Response
+    {
         $hash = (string)filter_input(INPUT_GET, 'hash');
         $error = !$this->user->authenticateUserByHash($hash);
 
@@ -84,16 +80,17 @@ class LoginChangePassword extends AbstractController {
         if($error) {
             $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
             $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
-            return $content;
+            return $responseEngine->render($request, '');
         }
 
         $this->session->setPathEntry('hash', $hash);
         $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
         $content->assign('hash', $hash);
-        return $content;
+        return $responseEngine->render($request, '');
     }
 
-    public function changePassword() : Content {
+    public function changePassword(Request $request, ResponseEngine $responseEngine): Response
+    {
         $content = new Content();
 
         $hash = filter_input(INPUT_POST, 'hash');
@@ -138,7 +135,7 @@ class LoginChangePassword extends AbstractController {
             return $this->returnError();
         }
 
-        return $content;
+        return $responseEngine->render($request, '');
     }
 
     protected function returnError() : Content {
