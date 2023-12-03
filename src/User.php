@@ -22,11 +22,11 @@
 
 namespace SFW2\Authority;
 
-use SFW2\Core\Database;
+use SFW2\Database\DatabaseInterface;
 
 class User {
 
-    const MAX_RETRIES = 100;
+    private const MAX_RETRIES = 100;
 
     protected int $userid         = 0;
     protected bool $isAdmin       = false;
@@ -36,14 +36,11 @@ class User {
 
     protected bool $authenticated = false;
 
-    /**
-     * @var \SFW2\Core\Database
-     */
-    protected $database = null;
+    protected DatabaseInterface $database;
 
-    public function __construct(Database $database, int $userId = 0) {
+    public function __construct(DatabaseInterface $database, int $userId = 0) {
         $this->database = $database;
-        $this->loadUserById((int)$userId);
+        $this->loadUserById($userId);
     }
 
     public function loadUserById(int $userId) : bool {
