@@ -60,13 +60,13 @@ class LoginChangePassword extends AbstractController {
     {
         if(!$this->user->isAuthenticated()) {
            # $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangeError');
-           return $responseEngine->render($request, '');
+           return $responseEngine->render($request);
         }
 
         #$content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
         #$content->assign('hash', '');
 
-        return $responseEngine->render($request, '');
+        return $responseEngine->render($request);
     }
 
     public function confirm(Request $request, ResponseEngine $responseEngine): Response
