@@ -33,38 +33,47 @@ class Login extends AbstractController {
 
     protected User $user;
 
-    protected SessionInterface $session;
-
     protected string $loginResetPath = '';
 
-    public function __construct(PathMap $path, User $user, SessionInterface $session, $loginResetPathId = null) {
-        $this->user = $user;
-        $this->session = $session;
+    public function __construct(
+        protected SessionInterface $session
+       # PathMapInterface $path,
+       # User $user,
+       # SessionInterface $session,
+       # $loginResetPathId = null
+    ) {
+      #  $this->user = $user;
 
-        if($loginResetPathId != null) {
-            $this->loginResetPath = $path->getPath($loginResetPathId);
-        }
+     #   if($loginResetPathId != null) {
+     #       $this->loginResetPath = $path->getPath($loginResetPathId);
+     #   }
     }
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-        $error = !$this->user->authenticateUser(
-            (string)filter_input(INPUT_POST, 'usr'),
-            (string)filter_input(INPUT_POST, 'pwd')
-        );
-        $this->session->setGlobalEntry(User::class, $this->user->getUserId());
+
+
+
+ #       $error = !$this->user->authenticateUser(
+ #           (string)filter_input(INPUT_POST, 'usr'),
+ #           (string)filter_input(INPUT_POST, 'pwd')
+ #       );
+ #       $this->session->setGlobalEntry(User::class, $this->user->getUserId());
         $this->session->regenerateSession();
 
         #$content = new Content('', $error);
         #$content->assign('user', $this->user->getFirstName());
 
-        return $responseEngine->render($request, '');
+        #$data['user_name'] = $this->user->getFirstName();
+
+#        $request = $request->withAttribute('sfw2_authority', $data);
+        return $responseEngine->render($request);
     }
 
     public function logoff(Request $request, ResponseEngine $responseEngine): Response
     {
         $this->user->reset();
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
-        return $responseEngine->render($request, '');
+        return $responseEngine->render($request);
     }
 }
