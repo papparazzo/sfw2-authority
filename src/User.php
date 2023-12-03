@@ -61,13 +61,7 @@ class User {
             return false;
         }
         $rv = $rv[0];
-        $this->firstName = $rv['FirstName'];
-        $this->lastName  = $rv['LastName'];
-        $this->mailAddr  = $rv['Email'];
-        $this->userid    = $rv['Id'];
-        $this->isAdmin   = $rv['Admin'] == '1' ? true : false;
-
-        return $this->authenticated = true;
+        return $this->extracted($rv);
     }
 
     public function authenticateUser(string $loginName, string $pwd) : bool {
@@ -96,13 +90,7 @@ class User {
 
         $this->updateRetries($row['Id'], true);
 
-        $this->firstName = $row['FirstName'];
-        $this->lastName  = $row['LastName'];
-        $this->mailAddr  = $row['Email'];
-        $this->userid    = $row['Id'];
-        $this->isAdmin   = $row['Admin'] == '1' ? true : false;
-
-        return $this->authenticated = true;
+        return $this->extracted($row);
     }
 
     public function authenticateUserByHash(string $hash) : bool {
@@ -121,13 +109,7 @@ class User {
 
         $this->updateRetries($row['Id'], true);
 
-        $this->firstName = $row['FirstName'];
-        $this->lastName  = $row['LastName'];
-        $this->mailAddr  = $row['Email'];
-        $this->userid    = $row['Id'];
-        $this->isAdmin   = $row['Admin'] == '1' ? true : false;
-
-        return $this->authenticated = true;
+        return $this->extracted($row);
     }
 
     public function resetPassword(string $oldPwd, string $newPwd) : bool {
@@ -224,5 +206,20 @@ class User {
             "AND CURRENT_TIMESTAMP > `LastTry` +  POW(2, `Retries`) - 1";
 
         $this->database->update($stmt, [$loginId]);
+    }
+
+    /**
+     * @param mixed $rv
+     * @return true
+     */
+    public function extracted(mixed $rv): bool
+    {
+        $this->firstName = $rv['FirstName'];
+        $this->lastName = $rv['LastName'];
+        $this->mailAddr = $rv['Email'];
+        $this->userid = $rv['Id'];
+        $this->isAdmin = $rv['Admin'] == '1';
+
+        return $this->authenticated = true;
     }
 }
