@@ -22,7 +22,11 @@
 
 namespace SFW2\Authority\Controller;
 
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Database\Database;
 use SFW2\Routing\AbstractController;
+use SFW2\Routing\ResponseEngine;
 use SFW2\Routing\Result\Content;
 use SFW2\Routing\PathMap\PathMap;
 
@@ -31,7 +35,6 @@ use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Validator\Validators\IsEMailAddress;
 
-use SFW2\Core\Database;
 use SFW2\Core\Helper;
 use SFW2\Core\Session;
 use SFW2\Core\View;
@@ -44,19 +47,10 @@ class LoginResetPassword extends AbstractController {
 
     use LoginHelperTrait;
 
-    /**
-     * @var \SFW2\Routing\User
-     */
-    protected \SFW2\Routing\User|User $user;
+    protected User $user;
 
-    /**
-     * @var SFW2\Core\Database
-     */
-    protected Database|SFW2\Core\Database $database;
+    protected Database $database;
 
-    /**
-     * @var \SFW2\Core\Session
-     */
     protected $session;
 
     /**
@@ -64,8 +58,7 @@ class LoginResetPassword extends AbstractController {
      */
     protected $loginChangePath = '';
 
-    public function __construct(int $pathId, PathMap $path, Database $database, User $user, Session $session, $loginChangePathId = null) {
-        parent::__construct($pathId);
+    public function __construct(PathMap $path, Database $database, User $user, Session $session, $loginChangePathId = null) {
         $this->database = $database;
         $this->user = $user;
         $this->session = $session;
@@ -74,12 +67,14 @@ class LoginResetPassword extends AbstractController {
         }
     }
 
-    public function index(bool $all = false) : Content {
+    public function index(Request $request, ResponseEngine $responseEngine): Response
+    {
         unset($all);
-        return new Content();
+        return $responseEngine->render($request);
     }
 
-    public function request() : Content {
+    public function request(Request $request, ResponseEngine $responseEngine): Response
+    {
         $content = new Content();
 
         $rulset = new Ruleset();
@@ -133,10 +128,15 @@ class LoginResetPassword extends AbstractController {
 
         $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
         $content->assign('name', $uname . ' (' . $addr . ')');
-        return $content;
+        return $responseEngine->render($request);
     }
 
-    protected function getHash(string $user, string $addr) : string {
+    protected function getHash(string $user, string $addr) : string
+    {
+         uniqid();
+
+
+
         $hash = md5($user . $addr . time() . Helper::getRandomInt());
 
         $stmt =
