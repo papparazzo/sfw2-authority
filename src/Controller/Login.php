@@ -52,8 +52,6 @@ class Login extends AbstractController {
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
 
-
-
  #       $error = !$this->user->authenticateUser(
  #           (string)filter_input(INPUT_POST, 'usr'),
  #           (string)filter_input(INPUT_POST, 'pwd')
