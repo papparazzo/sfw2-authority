@@ -11,7 +11,7 @@ use SFW2\Core\HttpExceptions\HttpForbidden;
 
 class Authorisation implements MiddlewareInterface
 {
-    private Permission $permission;
+    use getRoutingDataTrait;
 
     public function __construct(Permission $permission)
     {
