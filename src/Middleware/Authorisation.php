@@ -13,9 +13,10 @@ class Authorisation implements MiddlewareInterface
 {
     use getRoutingDataTrait;
 
-    public function __construct(Permission $permission)
+    public function __construct(
+        private readonly PermissionInterface $permission
+    )
     {
-        $this->permission = $permission;
     }
 
     /**
