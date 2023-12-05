@@ -6,8 +6,11 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
-use SFW2\Authority\Permission\Permission;
+
+use SFW2\Authority\Helper\PagePermissionType;
+use SFW2\Authority\Permission\PermissionInterface;
 use SFW2\Core\HttpExceptions\HttpForbidden;
+use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 
 class Authorisation implements MiddlewareInterface
 {
