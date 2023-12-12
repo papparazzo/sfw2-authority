@@ -27,11 +27,17 @@ class Authorisation implements MiddlewareInterface
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
-        // TODO set "own / all" for crud operations in header
+        $pathId = $this->getPathId($request);
+        $action = $this->getAction($request);
 
         if(!$this->permission->getActionPermission($pathId, $action)) {
             throw new HttpForbidden();
         }
+
+        $permissions = $this->permission->getPagePermission($pathId)->getPermissions();
+        $data = PagePermissionType::getPermissionArray($permissions);
+
+        $request = $request->withAttribute('sfw2_authority', $data);
 
         return $handler->handle($request);
     }
