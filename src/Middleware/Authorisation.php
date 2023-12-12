@@ -37,6 +37,10 @@ class Authorisation implements MiddlewareInterface
         $permissions = $this->permission->getPagePermission($pathId)->getPermissions();
         $data = PagePermissionType::getPermissionArray($permissions);
 
+       # $data['user_id'] = 1;
+       # $data['authenticated'] = false;
+       # $data['user_name'] = 'Hans Hanselmann';
+
         $request = $request->withAttribute('sfw2_authority', $data);
 
         return $handler->handle($request);

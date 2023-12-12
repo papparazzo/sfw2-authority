@@ -22,18 +22,13 @@
 
 namespace SFW2\Authority\Permission;
 
-use SFW2\Authority\Helper\PagePermission;
-use SFW2\Core\Database;
-use SFW2\Core\Permission\PermissionInterface;
+use InvalidArgumentException;
+use SFW2\Database\DatabaseInterface;
 use SFW2\Authority\User;
 
 class Permission implements PermissionInterface {
 
-    protected array $permission = [];
-
-    protected Database $database;
-
-    protected User $user;
+    protected bool $isAdmin = false;
 
     protected array $permissions = [];
 
@@ -42,30 +37,25 @@ class Permission implements PermissionInterface {
     /**
      * @throws PermissionException
      */
-    public function __construct(Database $database, User $user) {
-        $this->user = $user;
-        $this->database = $database;
-        if($this->user->isAdmin()) {
+    public function __construct(protected readonly DatabaseInterface $database, ?User $user = null) {
+        if (is_null($user)) {
+            $this->isAdmin = true;
             return;
         }
-        $this->loadRoles();
+
+        $this->isAdmin = $user->isAdmin();
+        $this->loadRoles($user->getUserId());
         $this->loadPermissions(0, $this->getInitPermission());
     }
 
     /**
      * @throws PermissionException
      */
-    protected function loadRoles(): void {
-        if($this->user->isAdmin()) {
-            return;
-        }
+    protected function loadRoles(int $userId): void
+    {
+        $stmt = "SELECT `RoleId` FROM `{TABLE_PREFIX}_user_role` WHERE `UserId` = %s";
 
-        $stmt =
-            "SELECT `RoleId` " .
-            "FROM `{TABLE_PREFIX}_user_role` " .
-            "WHERE `UserId` = '%s'";
-
-        $rows = $this->database->select($stmt, [$this->user->getUserId()]);
+        $rows = $this->database->select($stmt, []);
         foreach($rows as $row) {
             $this->roles[] = $row['RoleId'];
         }
@@ -75,7 +65,8 @@ class Permission implements PermissionInterface {
         }
     }
 
-    protected function getInitPermission() {
+    protected function getInitPermission()
+    {
         $stmt =
            "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
            "FROM `{TABLE_PREFIX}_permission` " .
@@ -89,14 +80,14 @@ class Permission implements PermissionInterface {
     }
 
     protected function loadPermissions(int $parentPathId, $initPermission): void {
-        if($this->user->isAdmin()) {
+        if ($this->isAdmin) {
             return;
         }
 
         $stmt =
             "SELECT `Id` " .
             "FROM `{TABLE_PREFIX}_path` " .
-            "WHERE `ParentPathId` = '%s'";
+            "WHERE `ParentPathId` = %s";
 
         $rows = $this->database->select($stmt, [$parentPathId]);
 
@@ -104,7 +95,7 @@ class Permission implements PermissionInterface {
             $stmt =
                 "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
                 "FROM `{TABLE_PREFIX}_permission` " .
-                "WHERE `PathId` = '%s' " .
+                "WHERE `PathId` = %s " .
                 "AND `RoleId` IN(%s) " .
                 "GROUP BY `RoleId`";
 
@@ -120,8 +111,8 @@ class Permission implements PermissionInterface {
         }
     }
 
-    public function getPagePermission($pathId): PagePermission {
-        if($this->user->isAdmin()) {
+    public function getPagePermission(int $pathId): PagePermission {
+        if($this->isAdmin) {
             return (new PagePermission())->setAllPermissions();
         }
 
@@ -131,8 +122,8 @@ class Permission implements PermissionInterface {
         return $this->permissions[$pathId];
     }
 
-    public function getActionPermission($pathId, $action = 'index'): bool {
-        if($this->user->isAdmin()) {
+    public function getActionPermission(int $pathId, $action = 'index'): bool {
+        if($this->isAdmin) {
             return true;
         }
 
@@ -145,7 +136,7 @@ class Permission implements PermissionInterface {
     }
 
     public function hasFullActionPermission($pathId, $action = 'index'): bool {
-        if($this->user->isAdmin()) {
+        if($this->isAdmin) {
             return true;
         }
 
@@ -155,5 +146,10 @@ class Permission implements PermissionInterface {
             'delete' => $this->getPagePermission($pathId)->deleteAllAllowed(),
             default => $this->getPagePermission($pathId)->readAllAllowed(),
         };
+    }
+
+    public function getPermission(int $pathId, string $action): int
+    {
+       throw new InvalidArgumentException("gibt es nicht");
     }
 }
