@@ -12,6 +12,7 @@ use SFW2\Authority\Permission\PermissionInterface;
 use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 
+// TODO Rename into AuthorisationMiddleware
 class Authorisation implements MiddlewareInterface
 {
     use getRoutingDataTrait;
