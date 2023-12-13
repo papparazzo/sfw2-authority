@@ -51,20 +51,19 @@ class Login extends AbstractController {
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-
- #       $error = !$this->user->authenticateUser(
- #           (string)filter_input(INPUT_POST, 'usr'),
- #           (string)filter_input(INPUT_POST, 'pwd')
- #       );
- #       $this->session->setGlobalEntry(User::class, $this->user->getUserId());
+        $error = !$this->user->authenticateUser(
+            (string)filter_input(INPUT_POST, 'usr'),
+            (string)filter_input(INPUT_POST, 'pwd')
+        );
+        $this->session->setGlobalEntry(User::class, $this->user->getUserId());
         $this->session->regenerateSession();
 
-        #$content = new Content('', $error);
-        #$content->assign('user', $this->user->getFirstName());
+        $data = [];
+        $data['user_name'] = $this->user->getFirstName();
+        $data['user_id'] = $this->user->getUserId();
+        $data['authenticated'] = false;
 
-        #$data['user_name'] = $this->user->getFirstName();
-
-#        $request = $request->withAttribute('sfw2_authority', $data);
+        $request = $request->withAttribute('sfw2_authority', $data);
         return $responseEngine->render($request);
     }
 
