@@ -10,6 +10,7 @@ use Psr\Http\Server\RequestHandlerInterface;
 use SFW2\Authority\Helper\PagePermissionType;
 use SFW2\Authority\Permission\PermissionInterface;
 use SFW2\Core\HttpExceptions\HttpForbidden;
+use SFW2\Core\HttpExceptions\HttpNotFound;
 use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 
 // TODO Rename into AuthorisationMiddleware
@@ -24,7 +25,7 @@ class Authorisation implements MiddlewareInterface
     }
 
     /**
-     * @throws HttpForbidden
+     * @throws HttpForbidden|HttpNotFound
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
     {
