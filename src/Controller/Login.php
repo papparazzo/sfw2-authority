@@ -25,6 +25,7 @@ namespace SFW2\Authority\Controller;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 use SFW2\Authority\User;
 use SFW2\Routing\ResponseEngine;
@@ -32,16 +33,18 @@ use SFW2\Session\SessionInterface;
 
 class Login extends AbstractController {
 
+    protected User $user;
+
     public function __construct(
         protected SessionInterface $session,
+        protected DatabaseInterface $database,
         protected ?string $loginResetPath = null
     ) {
+        $this->user = new User($this->database);
     }
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-
-
         $error = !$this->user->authenticateUser(
             (string)filter_input(INPUT_POST, 'usr'),
             (string)filter_input(INPUT_POST, 'pwd')
