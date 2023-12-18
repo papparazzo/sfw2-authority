@@ -4,11 +4,37 @@
     "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
 
     "require": {
-        "php": "^7.2"
+        "php": "^8.1",
+
+        "sfw2/validator": "^6.0",
+        "sfw2/core": "^3.0",
+        "sfw2/routing": "^5.0",
+        "sfw2/database": "^2.0",
+        "sfw2/session": "^3.0",
+
+        "psr/http-server-middleware": "^1.0.2"
     },
     "autoload": {
         "psr-4": {
             "SFW2\\Authority\\": "src/"
         }
-    }
+    },
+    "repositories" : [
+        {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-database.git"
+        }, {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-core.git"
+        }, {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-session.git"
+        }, {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-routing.git"
+        }, {
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-validator.git"
+        }
+    ]
 }
