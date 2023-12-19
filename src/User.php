@@ -29,9 +29,13 @@ class User {
     private const MAX_RETRIES = 100;
 
     protected int $userid         = 0;
+
     protected bool $isAdmin       = false;
+
     protected string $firstName   = '';
+
     protected string $lastName    = '';
+
     protected string $mailAddr    = '';
 
     protected bool $authenticated = false;
@@ -49,7 +53,7 @@ class User {
             return true;
         }
 
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
             "FROM `{TABLE_PREFIX}_user` " .
             "WHERE `Id` = '%s' " .
@@ -66,7 +70,7 @@ class User {
 
     public function authenticateUser(string $loginName, string $pwd) : bool {
         $this->reset();
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin`, " .
             "IF(CURRENT_TIMESTAMP > `LastTry` + POW(2, `Retries`) - 1, 1, 0) AS `OnTime` " .
             "FROM `{TABLE_PREFIX}_user` " .
@@ -113,7 +117,7 @@ class User {
     }
 
     public function resetPassword(string $oldPwd, string $newPwd) : bool {
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `Password` " .
             "FROM `{TABLE_PREFIX}_user` " .
             "WHERE `Id` = '%s'";
@@ -127,7 +131,7 @@ class User {
     }
 
     public function resetPasswordByHash(string $newPwd) : bool {
-        $stmt =
+        $stmt = /** @lang MySQL */
             "UPDATE `{TABLE_PREFIX}_user` " .
             "SET `Password` = '%s', `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
             "WHERE `Id` = '%s'";
