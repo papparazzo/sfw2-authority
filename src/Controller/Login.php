@@ -22,6 +22,7 @@
 
 namespace SFW2\Authority\Controller;
 
+use Exception;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -43,6 +44,9 @@ class Login extends AbstractController {
         $this->user = new User($this->database);
     }
 
+    /**
+     * @throws Exception
+     */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
         $error = !$this->user->authenticateUser(
@@ -50,7 +54,7 @@ class Login extends AbstractController {
             (string)filter_input(INPUT_POST, 'pwd')
         );
 
-        if(!$error) {
+        if($error) {
             return $responseEngine->render($request)->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
@@ -69,7 +73,8 @@ class Login extends AbstractController {
     public function logoff(Request $request, ResponseEngine $responseEngine): Response
     {
         $this->user->reset();
-        $this->session->setGlobalEntry(User::class, $this->user->getUserId());
+        $this->session->delGlobalEntry(User::class);
+        $this->session->regenerateSession();
         return $responseEngine->render($request);
     }
 }
