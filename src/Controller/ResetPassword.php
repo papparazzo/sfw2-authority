@@ -104,12 +104,10 @@ class LoginResetPassword extends AbstractController {
             return $content;
         }
 
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT CONCAT(`FirstName`, ' ', `LastName`) AS `Name` " .
-            "FROM `{TABLE_PREFIX}_user` " .
-            "WHERE `Email` = '%s' AND `LoginName` = '%s'";
-
-        $uname = $this->database->selectSingle($stmt, [$addr, $user]);
+            "FROM `{TABLE_PREFIX}_authority_user` " .
+            "WHERE `LoginName` = %s";
 
         $view = new View(__DIR__ . '/../../templates/confirmpwdreset.phtml');
         $view->assign('name', $uname);
@@ -136,6 +134,10 @@ class LoginResetPassword extends AbstractController {
          uniqid();
 
 
+        $stmt = /** @lang MySQL */
+            "UPDATE `{TABLE_PREFIX}_authority_user` " .
+            "SET `ResetExpireDate` = %s, `ResetHash` = %s " .
+            "WHERE `LoginName` = %s ";
 
         $hash = md5($user . $addr . time() . Helper::getRandomInt());
 

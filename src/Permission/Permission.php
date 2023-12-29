@@ -67,12 +67,11 @@ class Permission implements PermissionInterface {
 
     protected function getInitPermission()
     {
-        $stmt =
-           "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
-           "FROM `{TABLE_PREFIX}_permission` " .
-           "WHERE `PathId` = '0' " .
-           "AND `RoleId` IN(%s) " .
-           "GROUP BY `RoleId`";
+        $stmt = /** @lang MySQL */
+            "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
+            "FROM `{TABLE_PREFIX}_authority_permission` " .
+            "WHERE `PathId` = '0' " .
+            "AND `RoleId` IN(%s) ";
 
         $permission = $this->database->selectSingle($stmt, [implode(',', $this->roles)]);
         $this->permissions[0] = new PagePermission(explode(',', $permission));
@@ -84,17 +83,17 @@ class Permission implements PermissionInterface {
             return;
         }
 
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `Id` " .
             "FROM `{TABLE_PREFIX}_path` " .
             "WHERE `ParentPathId` = %s";
 
         $rows = $this->database->select($stmt, [$parentPathId]);
 
-        foreach($rows as $row) {
-            $stmt =
+        foreach ($rows as $row) {
+            $stmt = /** @lang MySQL */
                 "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
-                "FROM `{TABLE_PREFIX}_permission` " .
+                "FROM `{TABLE_PREFIX}_authority_permission` " .
                 "WHERE `PathId` = %s " .
                 "AND `RoleId` IN(%s) " .
                 "GROUP BY `RoleId`";

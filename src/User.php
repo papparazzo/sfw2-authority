@@ -55,8 +55,8 @@ class User {
 
         $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
-            "FROM `{TABLE_PREFIX}_user` " .
-            "WHERE `Id` = '%s' " .
+            "FROM `{TABLE_PREFIX}_authority_user` " .
+            "WHERE `Id` = %s " .
             "AND `Active` = '1'";
 
         $rv = $this->database->select($stmt, [$userId]);
@@ -73,8 +73,8 @@ class User {
         $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin`, " .
             "IF(CURRENT_TIMESTAMP > `LastTry` + POW(2, `Retries`) - 1, 1, 0) AS `OnTime` " .
-            "FROM `{TABLE_PREFIX}_user` " .
-            "WHERE `LoginName` LIKE '%s' " .
+            "FROM `{TABLE_PREFIX}_authority_user` " .
+            "WHERE `LoginName` LIKE %s " .
             "AND `Active` = '1'";
 
         $row = $this->database->selectRow($stmt, [$loginName]);
@@ -101,9 +101,9 @@ class User {
         $this->reset();
         $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
-            "FROM `{TABLE_PREFIX}_user` " .
+            "FROM `{TABLE_PREFIX}_authority_user` " .
             "WHERE `ResetExpireDate` >= NOW() " .
-            "AND `ResetHash` = '%s'";
+            "AND `ResetHash` = %s";
 
         $row = $this->database->selectRow($stmt, [$hash]);
 
@@ -119,8 +119,8 @@ class User {
     public function resetPassword(string $oldPwd, string $newPwd) : bool {
         $stmt = /** @lang MySQL */
             "SELECT `Password` " .
-            "FROM `{TABLE_PREFIX}_user` " .
-            "WHERE `Id` = '%s'";
+            "FROM `{TABLE_PREFIX}_authority_user` " .
+            "WHERE `Id` = %s";
 
         $oldPwdHash = $this->database->selectSingle($stmt, [$this->userid]);
 
@@ -132,9 +132,9 @@ class User {
 
     public function resetPasswordByHash(string $newPwd) : bool {
         $stmt = /** @lang MySQL */
-            "UPDATE `{TABLE_PREFIX}_user` " .
-            "SET `Password` = '%s', `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
-            "WHERE `Id` = '%s'";
+            "UPDATE `{TABLE_PREFIX}_authority_user` " .
+            "SET `Password` = %s, `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
+            "WHERE `Id` = %s";
 
         $newHash = password_hash($newPwd, PASSWORD_DEFAULT);
         $cnt = $this->database->update($stmt, [$newHash, $this->userid]);
@@ -188,7 +188,7 @@ class User {
         }
 
         if(password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-            $stmt = "UPDATE `{TABLE_PREFIX}_user` SET `Password` = '%s' WHERE `Id` = '%s' ";
+            $stmt = "UPDATE `{TABLE_PREFIX}_authority_user` SET `Password` = %s WHERE `Id` = %s ";
             $newh = password_hash($password, PASSWORD_DEFAULT);
             $this->database->update($stmt, [$newh, $userId]);
         }
@@ -196,7 +196,7 @@ class User {
     }
 
     protected function updateRetries(int $loginId, bool $sucess) : void {
-        $stmt = "UPDATE `{TABLE_PREFIX}_user` ";
+        $stmt = "UPDATE `{TABLE_PREFIX}_authority_user` ";
         if($sucess) {
             $stmt .= "SET `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = ''";
         } else {
