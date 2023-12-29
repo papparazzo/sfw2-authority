@@ -32,15 +32,16 @@ use SFW2\Authority\User;
 use SFW2\Routing\ResponseEngine;
 use SFW2\Session\SessionInterface;
 
-class Login extends AbstractController {
-
+class Authentication extends AbstractController
+{
     protected User $user;
 
     public function __construct(
-        protected SessionInterface $session,
+        protected SessionInterface  $session,
         protected DatabaseInterface $database,
-        protected ?string $loginResetPath = null
-    ) {
+        protected ?string           $loginResetPath = null
+    )
+    {
         $this->user = new User($this->database);
     }
 
@@ -54,8 +55,11 @@ class Login extends AbstractController {
             (string)filter_input(INPUT_POST, 'pwd')
         );
 
-        if($error) {
-            return $responseEngine->render($request)->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
+        if ($error) {
+            $values['pwd']['hint'] = 'Es wurden ungültige Daten übermittelt!';
+            $values['usr']['hint'] = ' ';
+            $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+            return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
         $this->session->setGlobalEntry(User::class, $this->user->getUserId());
@@ -64,7 +68,7 @@ class Login extends AbstractController {
         $data = [];
         $data['user_name'] = $this->user->getFirstName();
         $data['user_id'] = $this->user->getUserId();
-        $data['authenticated'] = false;
+        $data['authenticated'] = $this->user->isAuthenticated();;
 
         $request = $request->withAttribute('sfw2_authority', $data);
         return $responseEngine->render($request);

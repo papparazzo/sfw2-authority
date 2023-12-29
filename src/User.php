@@ -65,7 +65,8 @@ class User {
             return false;
         }
         $rv = $rv[0];
-        return $this->extracted($rv);
+        $this->extracted($rv);
+        return true;
     }
 
     public function authenticateUser(string $loginName, string $pwd) : bool {
@@ -212,11 +213,7 @@ class User {
         $this->database->update($stmt, [$loginId]);
     }
 
-    /**
-     * @param mixed $rv
-     * @return true
-     */
-    public function extracted(mixed $rv): bool
+    public function extracted(mixed $rv): void
     {
         $this->firstName = $rv['FirstName'];
         $this->lastName = $rv['LastName'];
