@@ -22,10 +22,12 @@
 
 namespace SFW2\Authority\Controller;
 
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Core\HttpExceptions\HttpForbidden;
+use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\PathMap\PathMap;
 
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
@@ -38,36 +40,65 @@ use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Validator\Validators\IsSameAs;
 
 
-class LoginChangePassword extends AbstractController {
+class ChangePassword extends AbstractController {
 
     use LoginHelperTrait;
 
     protected User $user;
 
-    protected SessionInterface $session;
-
-    protected $loginResetPath = '';
-
-    public function __construct(PathMap $path, User $user, SessionInterface $session, $loginResetPathId = null) {
-        $this->user = $user;
-        $this->session = $session;
-
-        if($loginResetPathId != null) {
-        }
+    public function __construct(
+        private readonly DatabaseInterface $database,
+        private readonly SessionInterface $session
+    )
+    {
+        $userId = $this->session->getGlobalEntry(User::class, 0);
+        $this->user = new User($this->database, $userId);
     }
 
+    /**
+     * @param Request $request
+     * @param ResponseEngine $responseEngine
+     * @return Response
+     * @throws HttpForbidden
+     */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
         if(!$this->user->isAuthenticated()) {
-           # $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangeError');
-           return $responseEngine->render($request);
+            throw new HttpForbidden();
         }
 
-        #$content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
-        #$content->assign('hash', '');
+        $rulset = new Ruleset();
+        $rulset->addNewRules('pwd', new IsNotEmpty(), new IsSameAs($_POST['pwdr']));
+        $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
+        $rulset->addNewRules('oldpwd', new IsNotEmpty());
+
+        $validator = new Validator($rulset);
+        $values = [];
+
+        $error = !$validator->validate($_POST, $values);
+
+        if($error) {
+            $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+            return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
+        }
+
+        $newPwd = $values['pwd']['value'];
+        $oldPwd = $values['oldpwd']['value'];
+        $error = !$this->user->resetPassword($oldPwd, $newPwd);
+
+        if($error) {
+            return $this->returnError($request, $responseEngine);
+        }
 
         return $responseEngine->render($request);
     }
+
+
+
+
+
+
+
 
     public function confirm(Request $request, ResponseEngine $responseEngine): Response
     {
@@ -78,38 +109,36 @@ class LoginChangePassword extends AbstractController {
         $this->session->regenerateSession();
 
         if($error) {
-            $content = new Content('SFW2\\Authority\\LoginChangePassword\\ResetError');
-            $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
-            return $responseEngine->render($request, '');
+            return $responseEngine->render(
+                request: $request,
+                data: ['expire' => $this->getExpireDate(self::$EXPIRE_DATE_OFFSET)],
+                template: "SFW2\\Authority\\ChangePassword\\ResetError"
+            );
         }
 
         $this->session->setPathEntry('hash', $hash);
-        $content = new Content('SFW2\\Authority\\LoginChangePassword\\ChangePassword');
-        $content->assign('hash', $hash);
-        return $responseEngine->render($request, '');
+
+        return $responseEngine->render(
+            request: $request,
+            data: ['hash' => $hash],
+            template: "SFW2\\Authority\\ChangePassword\\ChangePassword"
+        );
     }
 
+    /**
+     * @throws HttpForbidden
+     */
     public function changePassword(Request $request, ResponseEngine $responseEngine): Response
     {
-        $content = new Content();
-
         $hash = filter_input(INPUT_POST, 'hash');
 
-        if($hash == '' && !$this->user->isAuthenticated()) {
-            return $this->returnError();
-        }
-
         if($hash != '' && $this->session->getPathEntry('hash', '') != $hash) {
-            return $this->returnError();
+            throw new HttpForbidden();
         }
 
         $rulset = new Ruleset();
         $rulset->addNewRules('pwd', new IsNotEmpty(), new IsSameAs($_POST['pwdr']));
         $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
-
-        if($hash == '') {
-            $rulset->addNewRules('oldpwd', new IsNotEmpty());
-        }
 
         $validator = new Validator($rulset);
         $values = [];
@@ -117,29 +146,23 @@ class LoginChangePassword extends AbstractController {
         $error = !$validator->validate($_POST, $values);
 
         if($error) {
-            $content->setError(true);
-            $content->assignArray($values);
-            return $content;
+            $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+            return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
         $newPwd = $values['pwd']['value'];
-        if($hash == '') {
-            $oldPwd = $values['oldpwd']['value'];
-            $error = !$this->user->resetPassword($oldPwd, $newPwd);
-        } else {
-            $this->session->delPathEntry('hash');
-            $error = !$this->user->resetPasswordByHash($newPwd);
-        }
+        $this->session->delPathEntry('hash');
+        $error = !$this->user->resetPasswordByHash($newPwd);
 
         if($error) {
-            return $this->returnError();
+            return $this->returnError($request, $responseEngine);
         }
 
-        return $responseEngine->render($request, '');
+        return $responseEngine->render($request);
     }
 
-    protected function returnError() : Content {
-        $content = new Content();
+    protected function returnError(Request $request, ResponseEngine $responseEngine): Response
+    {
         $values = [
             'oldpwd' => [
                 'hint' => ' ',
@@ -154,8 +177,7 @@ class LoginChangePassword extends AbstractController {
                 'value' => ''
             ]
         ];
-        $content->assignArray($values);
-        $content->setError(true);
-        return $content;
+        $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+        return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
     }
 }

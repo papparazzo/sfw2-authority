@@ -94,8 +94,8 @@ class User {
         }
 
         $this->updateRetries($row['Id'], true);
-
-        return $this->extracted($row);
+        $this->extracted($row);
+        return true;
     }
 
     public function authenticateUserByHash(string $hash) : bool {
@@ -113,8 +113,8 @@ class User {
         }
 
         $this->updateRetries($row['Id'], true);
-
-        return $this->extracted($row);
+        $this->extracted($row);
+        return true;
     }
 
     public function resetPassword(string $oldPwd, string $newPwd) : bool {
@@ -164,11 +164,11 @@ class User {
     }
 
     public function getUserName() : string {
-        return $this->firstName[0] . '. ' . $this->lastName;
+        return "{$this->firstName[0]}. $this->lastName";
     }
 
     public function getFullName() : string {
-        return $this->firstName . ' ' . $this->lastName;
+        return "$this->firstName $this->lastName";
     }
 
     public function getMailAddr() : string {
@@ -206,7 +206,7 @@ class User {
                 "`Retries` = IF(`Retries` + 1 < " . self::MAX_RETRIES .  ", `Retries` + 1, 0) ";
         }
         $stmt .=
-            "WHERE `Id` = '%s' " .
+            "WHERE `Id` = %s " .
             "AND `Active` = 1 " .
             "AND CURRENT_TIMESTAMP > `LastTry` +  POW(2, `Retries`) - 1";
 
@@ -220,7 +220,6 @@ class User {
         $this->mailAddr = $rv['Email'];
         $this->userid = $rv['Id'];
         $this->isAdmin = $rv['Admin'] == '1';
-
-        return $this->authenticated = true;
+        $this->authenticated = true;
     }
 }

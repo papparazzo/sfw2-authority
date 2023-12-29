@@ -13,13 +13,14 @@ use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Core\HttpExceptions\HttpNotFound;
 use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 
-// TODO Rename into AuthorisationMiddleware
 class Authorisation implements MiddlewareInterface
 {
     use getRoutingDataTrait;
 
     public function __construct(
-        private readonly PermissionInterface $permission
+   #     private readonly PermissionInterface $permission,
+        private readonly SessionInterface    $session,
+        private readonly DatabaseInterface   $database
     )
     {
     }
@@ -39,9 +40,9 @@ class Authorisation implements MiddlewareInterface
         $permissions = $this->permission->getPagePermission($pathId)->getPermissions();
         $data = PagePermissionType::getPermissionArray($permissions);
 
-       # $data['user_id'] = 1;
-       # $data['authenticated'] = false;
-       # $data['user_name'] = 'Hans Hanselmann';
+        $data['user_id'] = $userId;
+        $data['authenticated'] = $user->isAuthenticated();
+        $data['user_name'] = $user->getFullName();
 
         $request = $request->withAttribute('sfw2_authority', $data);
 

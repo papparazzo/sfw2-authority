@@ -22,46 +22,36 @@
 
 namespace SFW2\Authority\Controller;
 
+use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use SFW2\Database\Database;
+use SFW2\Core\Utils\DateTimeHelper;
+use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
+use SFW2\Routing\PathMap\PathMapInterface;
 use SFW2\Routing\ResponseEngine;
-use SFW2\Routing\Result\Content;
-use SFW2\Routing\PathMap\PathMap;
 
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\IsNotEmpty;
-use SFW2\Validator\Validators\IsEMailAddress;
 
-use SFW2\Core\Helper;
-use SFW2\Core\Session;
-use SFW2\Core\View;
-
-use SFW2\Authority\User;
 
 use SFW2\Authority\Helper\LoginHelperTrait;
 
-class LoginResetPassword extends AbstractController {
-
+class ResetPassword extends AbstractController
+{
     use LoginHelperTrait;
-
-    protected User $user;
-
-    protected Database $database;
-
-    protected $session;
 
     /**
      * @var string
      */
     protected $loginChangePath = '';
 
-    public function __construct(PathMap $path, Database $database, User $user, Session $session, $loginChangePathId = null) {
-        $this->database = $database;
-        $this->user = $user;
-        $this->session = $session;
+    public function __construct(
+        private readonly DatabaseInterface $database, private readonly DateTimeHelper $dateTimeHelper,
+        PathMapInterface $path, $loginChangePathId = null
+    )
+    {
         if($loginChangePathId != null) {
             $this->loginChangePath = $path->getPath($loginChangePathId);
         }
@@ -69,39 +59,26 @@ class LoginResetPassword extends AbstractController {
 
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-        unset($all);
-        return $responseEngine->render($request);
-    }
-
-    public function request(Request $request, ResponseEngine $responseEngine): Response
-    {
-        $content = new Content();
-
         $rulset = new Ruleset();
         $rulset->addNewRules('user', new IsNotEmpty());
-        $rulset->addNewRules('addr', new IsNotEmpty(), new IsEMailAddress());
 
         $validator = new Validator($rulset);
         $values = [];
 
         $error = !$validator->validate($_POST, $values);
 
-        if($error) {
-            $content->setError(true);
-            $content->assignArray($values);
-            return $content;
+        $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+
+        if ($error) {
+            return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
         $user = $values['user']['value'];
-        $addr = $values['addr']['value'];
-        $hash = $this->getHash($user, $addr);
+        $hash = $this->getHash($user);
 
-        if($hash == '') {
-            $values['addr']['hint'] = 'Es wurden ungültige Daten übermittelt!';
-            $values['user']['hint'] = ' ';
-            $content->setError(true);
-            $content->assignArray($values);
-            return $content;
+        if(is_null($hash)) {
+            // No hints on non exsiting user...
+            return $responseEngine->render($request);
         }
 
         $stmt = /** @lang MySQL */
@@ -109,47 +86,35 @@ class LoginResetPassword extends AbstractController {
             "FROM `{TABLE_PREFIX}_authority_user` " .
             "WHERE `LoginName` = %s";
 
-        $view = new View(__DIR__ . '/../../templates/confirmpwdreset.phtml');
-        $view->assign('name', $uname);
-        $view->assign('hash', $hash);
-        $view->assign('path',
-            'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash"
-        );
+        $uname = $this->database->selectSingle($stmt, [$user]);
 
-        $header = [
-            'From:webmaster <webmaster@vfvconcordia.de>',
-            'MIME-Version: 1.0',
-            'Content-Type:text/html; charset=utf-8',
-            'Content-Transfer-Encoding: 8bit'
+        $data = [
+            'name' => $uname,
+            'hash' => $hash,
+            'path' => 'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash",
+            'expire' => $this->getExpireDate(self::$EXPIRE_DATE_OFFSET)
         ];
-        mail($addr, 'Passwort vergessen', $view->getContent(), implode("\r\n", $header));
 
-        $content->assign('expire', $this->getExpireDate($this->getExpireDateOffset()));
-        $content->assign('name', $uname . ' (' . $addr . ')');
+        // TODO send mail
+
         return $responseEngine->render($request);
     }
 
-    protected function getHash(string $user, string $addr) : string
+    protected function getHash(string $user): ?string
     {
-         uniqid();
-
+        $hash = uniqid(more_entropy: true);
 
         $stmt = /** @lang MySQL */
             "UPDATE `{TABLE_PREFIX}_authority_user` " .
             "SET `ResetExpireDate` = %s, `ResetHash` = %s " .
             "WHERE `LoginName` = %s ";
 
-        $hash = md5($user . $addr . time() . Helper::getRandomInt());
 
-        $stmt =
-            "UPDATE `{TABLE_PREFIX}_user` " .
-            "SET `ResetExpireDate` = '%s', `ResetHash` = '%s' " .
-            "WHERE `Email` = '%s' AND `LoginName` = '%s' ";
-
-        $val = $this->database->update($stmt, [$this->getMySQLExpireDate(), $hash, $addr, $user]);
+        $time = $this->dateTimeHelper->getDateTimeObject(time() + self::$EXPIRE_DATE_OFFSET);
+        $val = $this->database->update($stmt, [$time, $hash, $user]);
 
         if($val !== 1) {
-            return '';
+            return null;
         }
 
         return $hash;
