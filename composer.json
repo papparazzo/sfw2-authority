@@ -4,13 +4,13 @@
     "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
 
     "require": {
-        "php": "^8.1",
+        "php": "^8.2",
 
         "sfw2/validator": "^6.0",
-        "sfw2/core": "^3.0",
-        "sfw2/routing": "^5.0",
+        "sfw2/core": "^5.0",
+        "sfw2/routing": "^7.0",
         "sfw2/database": "^2.0",
-        "sfw2/session": "^3.0",
+        "sfw2/session": "^4.0",
 
         "psr/http-server-middleware": "^1.0.2"
     },

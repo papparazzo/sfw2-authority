@@ -22,11 +22,16 @@
 
 namespace SFW2\Authority\Controller;
 
+use Exception;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+
 use SFW2\Core\Utils\DateTimeHelper;
+use SFW2\Core\Utils\Mailer;
+
 use SFW2\Database\DatabaseInterface;
+
 use SFW2\Routing\AbstractController;
 use SFW2\Routing\PathMap\PathMapInterface;
 use SFW2\Routing\ResponseEngine;
@@ -45,16 +50,17 @@ class ResetPassword extends AbstractController
     /**
      * @var string
      */
-    protected $loginChangePath = '';
+    protected string $loginChangePath = '';
 
     public function __construct(
-        private readonly DatabaseInterface $database, private readonly DateTimeHelper $dateTimeHelper,
-        PathMapInterface $path, $loginChangePathId = null
+        private readonly DatabaseInterface $database,
+        private readonly DateTimeHelper $dateTimeHelper,
+        private readonly Mailer $mailer,
+        PathMapInterface $path,
+        int $loginChangePathId
     )
     {
-        if($loginChangePathId != null) {
-            $this->loginChangePath = $path->getPath($loginChangePathId);
-        }
+        $this->loginChangePath = $path->getPath($loginChangePathId);
     }
 
     /**
@@ -85,20 +91,25 @@ class ResetPassword extends AbstractController
         }
 
         $stmt = /** @lang MySQL */
-            "SELECT CONCAT(`FirstName`, ' ', `LastName`) AS `Name` " .
+            "SELECT CONCAT(`FirstName`, ' ', `LastName`) AS `Name`, Email " .
             "FROM `{TABLE_PREFIX}_authority_user` " .
             "WHERE `LoginName` = %s";
 
-        $uname = $this->database->selectSingle($stmt, [$user]);
+        $row = $this->database->selectRow($stmt, [$user]);
 
         $data = [
-            'name' => $uname,
+            'name' => trim($row['Name']),
             'hash' => $hash,
             'path' => 'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash",
             'expire' => $this->getExpireDate(self::$EXPIRE_DATE_OFFSET)
         ];
 
-        // TODO send mail
+        $this->mailer->send(
+            $row['Email'],
+            'Neues Passwort',
+            'SFW2\\Authority\\ResetPassword\\ConfirmPasswordResetEmail',
+            $data
+        );
 
         return $responseEngine->render($request);
     }
