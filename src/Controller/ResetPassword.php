@@ -57,6 +57,9 @@ class ResetPassword extends AbstractController
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
         $rulset = new Ruleset();
@@ -100,6 +103,9 @@ class ResetPassword extends AbstractController
         return $responseEngine->render($request);
     }
 
+    /**
+     * @throws Exception
+     */
     protected function getHash(string $user): ?string
     {
         $hash = uniqid(more_entropy: true);

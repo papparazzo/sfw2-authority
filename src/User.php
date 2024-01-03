@@ -22,13 +22,15 @@
 
 namespace SFW2\Authority;
 
+use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Database\DatabaseInterface;
 
-class User {
+class User
+{
 
     private const MAX_RETRIES = 100;
 
-    protected int $userid         = 0;
+    protected ?int $userid        = null;
 
     protected bool $isAdmin       = false;
 
@@ -40,17 +42,22 @@ class User {
 
     protected bool $authenticated = false;
 
-    protected DatabaseInterface $database;
-
-    public function __construct(DatabaseInterface $database, int $userId = 0) {
-        $this->database = $database;
+    /**
+     * @throws HttpForbidden
+     */
+    public function __construct(protected readonly DatabaseInterface $database, ?int $userId = null)
+    {
         $this->loadUserById($userId);
     }
 
-    public function loadUserById(int $userId) : bool {
-        if($userId == 0) {
+    /**
+     * @throws HttpForbidden
+     */
+    public function loadUserById(?int $userId): void
+    {
+        if (is_null($userId)) {
             $this->reset();
-            return true;
+            return;
         }
 
         $stmt = /** @lang MySQL */
@@ -59,17 +66,16 @@ class User {
             "WHERE `Id` = %s " .
             "AND `Active` = '1'";
 
-        $rv = $this->database->select($stmt, [$userId]);
+        $rv = $this->database->selectRow($stmt, [$userId]);
 
-        if(count($rv) != 1) {
-            return false;
+        if (empty($rv)) {
+            throw new HttpForbidden();
         }
-        $rv = $rv[0];
         $this->extracted($rv);
-        return true;
     }
 
-    public function authenticateUser(string $loginName, string $pwd) : bool {
+    public function authenticateUser(string $loginName, string $pwd): bool
+    {
         $this->reset();
         $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin`, " .
@@ -80,15 +86,15 @@ class User {
 
         $row = $this->database->selectRow($stmt, [$loginName]);
 
-        if(empty($row)) {
+        if (empty($row)) {
             return false;
         }
 
-        if($row['OnTime'] == 0) {
+        if ($row['OnTime'] == 0) {
             return false;
         }
 
-        if(!$this->checkPassword($row['Id'], $row['Password'], $pwd)) {
+        if (!$this->checkPassword($row['Id'], $row['Password'], $pwd)) {
             $this->updateRetries($row['Id'], false);
             return false;
         }
@@ -98,7 +104,8 @@ class User {
         return true;
     }
 
-    public function authenticateUserByHash(string $hash) : bool {
+    public function authenticateUserByHash(string $hash): bool
+    {
         $this->reset();
         $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
@@ -108,7 +115,7 @@ class User {
 
         $row = $this->database->selectRow($stmt, [$hash]);
 
-        if(empty($row)) {
+        if (empty($row)) {
             return false;
         }
 
@@ -117,7 +124,8 @@ class User {
         return true;
     }
 
-    public function resetPassword(string $oldPwd, string $newPwd) : bool {
+    public function resetPassword(string $oldPwd, string $newPwd): bool
+    {
         $stmt = /** @lang MySQL */
             "SELECT `Password` " .
             "FROM `{TABLE_PREFIX}_authority_user` " .
@@ -125,13 +133,14 @@ class User {
 
         $oldPwdHash = $this->database->selectSingle($stmt, [$this->userid]);
 
-        if(!$this->checkPassword($this->userid, $oldPwdHash, $oldPwd)) {
+        if (!$this->checkPassword($this->userid, $oldPwdHash, $oldPwd)) {
             return false;
         }
         return $this->resetPasswordByHash($newPwd);
     }
 
-    public function resetPasswordByHash(string $newPwd) : bool {
+    public function resetPasswordByHash(string $newPwd): bool
+    {
         $stmt = /** @lang MySQL */
             "UPDATE `{TABLE_PREFIX}_authority_user` " .
             "SET `Password` = %s, `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
@@ -142,53 +151,63 @@ class User {
         return $cnt == 1;
     }
 
-    public function reset(string $firstName = '', string $lastName = '', string $mailAddr = '') : void {
+    public function reset(): void
+    {
         $this->authenticated = false;
-        $this->firstName     = $firstName;
-        $this->lastName      = $lastName;
-        $this->mailAddr      = $mailAddr;
-        $this->userid        = 0;
-        $this->isAdmin       = false;
+        $this->firstName = '';
+        $this->lastName = '';
+        $this->mailAddr = '';
+        $this->userid = null;
+        $this->isAdmin = false;
     }
 
-    public function isAuthenticated() : bool {
+    public function isAuthenticated(): bool
+    {
         return $this->authenticated;
     }
 
-    public function getFirstName() : string {
+    public function getFirstName(): string
+    {
         return $this->firstName;
     }
 
-    public function getLastName() : string {
+    public function getLastName(): string
+    {
         return $this->lastName;
     }
 
-    public function getUserName() : string {
+    public function getUserName(): string
+    {
         return "{$this->firstName[0]}. $this->lastName";
     }
 
-    public function getFullName() : string {
+    public function getFullName(): string
+    {
         return "$this->firstName $this->lastName";
     }
 
-    public function getMailAddr() : string {
+    public function getMailAddr(): string
+    {
         return $this->mailAddr;
     }
 
-    public function getUserId() : int {
+    public function getUserId(): ?int
+    {
         return $this->userid;
     }
 
-    public function isAdmin(): bool {
+    public function isAdmin(): bool
+    {
         return $this->isAdmin;
     }
 
-    protected function checkPassword(int $userId, string $hash, string $password) : bool {
-        if(!password_verify($password, $hash)) {
+    protected function checkPassword(int $userId, string $hash, string $password): bool
+    {
+        if (!password_verify($password, $hash)) {
             return false;
         }
 
-        if(password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+        if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
             $stmt = "UPDATE `{TABLE_PREFIX}_authority_user` SET `Password` = %s WHERE `Id` = %s ";
             $newh = password_hash($password, PASSWORD_DEFAULT);
             $this->database->update($stmt, [$newh, $userId]);
@@ -196,14 +215,15 @@ class User {
         return true;
     }
 
-    protected function updateRetries(int $loginId, bool $sucess) : void {
+    protected function updateRetries(int $loginId, bool $sucess): void
+    {
         $stmt = "UPDATE `{TABLE_PREFIX}_authority_user` ";
-        if($sucess) {
+        if ($sucess) {
             $stmt .= "SET `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = ''";
         } else {
             $stmt .=
-                "SET `Active` = IF(`Retries` + 1 < " . self::MAX_RETRIES .  ", 1, 0), " .
-                "`Retries` = IF(`Retries` + 1 < " . self::MAX_RETRIES .  ", `Retries` + 1, 0) ";
+                "SET `Active` = IF(`Retries` + 1 < " . self::MAX_RETRIES . ", 1, 0), " .
+                "`Retries` = IF(`Retries` + 1 < " . self::MAX_RETRIES . ", `Retries` + 1, 0) ";
         }
         $stmt .=
             "WHERE `Id` = %s " .
