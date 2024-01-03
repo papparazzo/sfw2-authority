@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS `{TABLE_PREFIX}_authority_user_role` (
 ALTER TABLE `{TABLE_PREFIX}_authority_user_role` ADD UNIQUE KEY `key` (`UserId`,`RoleId`);
 
 INSERT INTO `{TABLE_PREFIX}_authority_user_role` (`UserId`, `RoleId`) VALUES
-(0, 1),
+(NULL, 1),
 (1, 2);
 
 -- TODO Do not vorget colations

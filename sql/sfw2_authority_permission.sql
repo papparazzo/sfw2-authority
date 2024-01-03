@@ -24,11 +24,13 @@ SET time_zone = "+00:00";
 CREATE TABLE IF NOT EXISTS `{TABLE_PREFIX}_authority_permission` (
     `RoleId` INT(10) UNSIGNED NOT NULL,
     `PathId` INT(10) UNSIGNED NOT NULL,
-    `Permission` SET('READ_OWN','READ_ALL','CREATE','UPDATE_OWN','UPDATE_ALL','DELETE_OWN','DELETE_ALL') NOT NULL DEFAULT 'READ_OWN'
+    `Action` VARCHAR(256) NOT NULL,
+    `Access` ENUM('VORBIDDEN', 'RESTRICTED', 'FULL') COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-ALTER TABLE `{TABLE_PREFIX}_authority_permission` ADD UNIQUE KEY `RoleId` (`RoleId`,`PathId`);
+ALTER TABLE `{TABLE_PREFIX}_authority_permission` ADD UNIQUE KEY `RoleId` (`RoleId`,`PathId`,`Action`);
 
-INSERT INTO `{TABLE_PREFIX}_authority_permission` (`RoleId`, `PathId`, `Permission`) VALUES
-(1, 0, 'READ_OWN,READ_ALL'),
-(2, 0, 'READ_OWN,READ_ALL');
+INSERT INTO `{TABLE_PREFIX}_authority_permission` (`RoleId`, `PathId`, `Action`, `Access`) VALUES
+(1, 0, 'read*', 'ALL'),
+(2, 0, '*', 'ALL');
+
