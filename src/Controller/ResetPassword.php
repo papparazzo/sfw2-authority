@@ -97,11 +97,14 @@ class ResetPassword extends AbstractController
 
         $row = $this->database->selectRow($stmt, [$user]);
 
+        $expireDate = $this->getExpireDate(self::$EXPIRE_DATE_OFFSET);
+        $userName = trim($row['Name']);
+
         $data = [
-            'name' => trim($row['Name']),
+            'name' => $userName,
             'hash' => $hash,
             'path' => 'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash",
-            'expire' => $this->getExpireDate(self::$EXPIRE_DATE_OFFSET)
+            'expire' => $expireDate
         ];
 
         $this->mailer->send(
@@ -111,7 +114,24 @@ class ResetPassword extends AbstractController
             $data
         );
 
-        return $responseEngine->render($request);
+        return $responseEngine->render($request, [
+            'title' => 'Passwort rücksetzen',
+            'description' => "
+                <p>
+                    Bestätigungsnachricht wurde erfolgreich an <strong>$userName</strong> verschickt.
+                </p>
+                <p>
+                    Bitte klicke auf den Bestätigungslink den du per E-Mail erhälst
+                    um dein neues Passwort eingeben zu können.
+                </p>
+                <p>
+                    Der Bestätigungslink ist <strong>$expireDate</strong>
+                    gültig. Solltest du nicht innerhalb dieser Zeit auf den Link geklickt
+                    haben so wird dieser ungültig und du musst abermals ein neuen Bestätigunslink anfordern!
+                </p>
+            ",
+            'reload' => false
+        ]);
     }
 
     /**

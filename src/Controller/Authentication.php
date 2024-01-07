@@ -71,7 +71,13 @@ class Authentication extends AbstractController
         $data['authenticated'] = $this->user->isAuthenticated();;
 
         $request = $request->withAttribute('sfw2_authority', $data);
-        return $responseEngine->render($request);
+        return $responseEngine->render($request, [
+            'title' => 'Anmelden',
+            'description' =>
+                "Hallo <strong>{$this->user->getFirstName()}</strong>,<br />
+                du wurdest erfolgreich angemeldet. Zum Abmelden klicke bitte oben rechts auf <strong>abmelden</strong>",
+            'reload' => true
+        ]);
     }
 
     public function logoff(Request $request, ResponseEngine $responseEngine): Response
@@ -79,6 +85,11 @@ class Authentication extends AbstractController
         $this->user->reset();
         $this->session->delGlobalEntry(User::class);
         $this->session->regenerateSession();
-        return $responseEngine->render($request);
+        return $responseEngine->render($request, [
+            'title' => 'Abmelden',
+            'description' =>
+                'Du wurdest erfolgreich abgemeldet. Um dich erneut anzumelden klicke bitte oben rechts auf Login.',
+            'reload' => true
+        ]);
     }
 }
