@@ -22,35 +22,46 @@
 
 namespace SFW2\Authority\Permission;
 
-use InvalidArgumentException;
-use SFW2\Database\DatabaseInterface;
 use SFW2\Authority\User;
+use SFW2\Core\HttpExceptions\HttpForbidden;
+use SFW2\Core\Permission\AccessType;
+use SFW2\Core\Permission\PermissionInterface;
+use SFW2\Database\DatabaseInterface;
+use SFW2\Session\SessionInterface;
 
-class Permission
+final class Permission implements PermissionInterface
 {
+    private bool $isAdmin;
 
-    protected bool $isAdmin = false;
+    private array $permissions = [];
 
-    protected array $permissions = [];
-
-    protected array $roles = [];
-
-    public function __construct(protected readonly User $user, protected readonly DatabaseInterface $database)
+    /**
+     * @throws HttpForbidden
+     */
+    public function __construct(SessionInterface $session, private readonly DatabaseInterface $database)
     {
-        $this->isAdmin = $user->isAdmin();
-        #        if ($this->isAdmin) {
-#            return;
-#        }
+        $userId = $session->getGlobalEntry(User::class);
 
-        $this->roles = $this->getRoles($user->getUserId());
-        $this->loadPermissions(0, $this->getInitPermission());
+        $this->isAdmin = (new User($this->database, $userId))->isAdmin();
+
+        if ($this->isAdmin) {
+            return;
+        }
+
+        $roles = $this->getRoles($userId);
+        $this->loadPermissions(0, $this->getInitPermission($roles), $roles);
     }
 
-    protected function getRoles(int $userId): array
+    private function getRoles(?int $userId): array
     {
-        $stmt = "SELECT `RoleId` FROM `{TABLE_PREFIX}_authority_user_role` WHERE `UserId` = %s";
+        if (is_null($userId)) {
+            $stmt = "SELECT `RoleId` FROM `{TABLE_PREFIX}_authority_user_role` WHERE `UserId` IS NULL";
+            $rows = $this->database->select($stmt);
+        } else {
+            $stmt = "SELECT `RoleId` FROM `{TABLE_PREFIX}_authority_user_role` WHERE `UserId` = %s";
+            $rows = $this->database->select($stmt, [$userId]);
+        }
 
-        $rows = $this->database->select($stmt, [$userId]);
         $roles = [];
         foreach ($rows as $row) {
             $roles[] = $row['RoleId'];
@@ -58,26 +69,19 @@ class Permission
         return $roles;
     }
 
-    protected function getInitPermission()
+    private function getInitPermission(array $roles): array
     {
-        $stmt = /** @lang MySQL */
-            "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
-            "FROM `{TABLE_PREFIX}_authority_permission` " .
-            "WHERE `PathId` = '0' " .
-            "AND `RoleId` IN(%s) ";
-
-        $permission = $this->database->selectSingle($stmt, [implode(',', $this->roles)]);
-        $this->permissions[0] = new PagePermission(explode(',', $permission));
-
-        return $permission; # 'READ_OWN,READ_ALL'
+        return
+            $this->permissions[0] = $this->database->selectKeyValue(
+                'Action',
+                'Access',
+                '{TABLE_PREFIX}_authority_permission',
+                ['PathId' => 0, 'RoleId' => $roles]
+            );
     }
 
-    protected function loadPermissions(int $parentPathId, $initPermission): void
+    private function loadPermissions(int $parentPathId, $initPermission, array $roles): void
     {
-        #if ($this->isAdmin) {
-        #    return;
-        #}
-
         $stmt = /** @lang MySQL */
             "SELECT `Id` " .
             "FROM `{TABLE_PREFIX}_path` " .
@@ -86,67 +90,59 @@ class Permission
         $rows = $this->database->select($stmt, [$parentPathId]);
 
         foreach ($rows as $row) {
-            $stmt = /** @lang MySQL */
-                "SELECT GROUP_CONCAT(`Permission`) AS `Permission` " .
-                "FROM `{TABLE_PREFIX}_authority_permission` " .
-                "WHERE `PathId` = %s " .
-                "AND `RoleId` IN(%s) " .
-                "GROUP BY `RoleId`";
+             $subRow = $this->database->selectKeyValue(
+                'Action',
+                'Access',
+                '{TABLE_PREFIX}_authority_permission',
+                ['PathId' => $row['Id'], 'RoleId' => $roles]
+            );
+            $permission = array_merge($initPermission, $subRow);
+            $this->permissions[$row['Id']] = $permission;
+            $this->loadPermissions($row['Id'], $permission, $roles);
+        }
+    }
 
-            $subRow = $this->database->selectRow($stmt, [$row['Id'], implode(',', $this->roles)]);
+    public function checkPermission(int $pathId, string $action): AccessType
+    {
+        if ($this->isAdmin) {
+            return AccessType::FULL;
+        }
 
-            $permission = $initPermission;
-            if (!empty($subRow)) {
-                $permission = $subRow['Permission'];
+        foreach ($this->permissions[$pathId] as $k => $v) {
+            if($k == $action) {
+                return AccessType::getByName($v);
             }
-
-            $this->permissions[$row['Id']] = new PagePermission(explode(',', $permission));
-            $this->loadPermissions($row['Id'], $permission);
-        }
-    }
-
-    public function getPagePermission(int $pathId): PagePermission
-    {
-        if ($this->isAdmin) {
-            return (new PagePermission())->setAllPermissions();
         }
 
-        if (!isset($this->permissions[$pathId])) {
-            return new PagePermission();
-        }
-        return $this->permissions[$pathId];
-    }
-
-    public function getActionPermission(int $pathId, $action = 'index'): bool
-    {
-        if ($this->isAdmin) {
-            return true;
+        /* FIXME Match with regular expre.
+        foreach ($this->permissions[$pathId] as $k => $v) {
+            if($k == $action) {
+                return $v != 'NONE'; // Best Match!
+            }
         }
 
-        return match ($action) {
-            'create' => $this->getPagePermission($pathId)->createAllowed(),
-            'update' => $this->getPagePermission($pathId)->updateOwnAllowed(),
-            'delete' => $this->getPagePermission($pathId)->deleteOwnAllowed(),
-            default => $this->getPagePermission($pathId)->readOwnAllowed(),
-        };
-    }
+         final public const ACTION_VORBIDDEN = '';
 
-    public function hasFullActionPermission($pathId, $action = 'index'): bool
-    {
-        if ($this->isAdmin) {
-            return true;
+    final public const ACTION_ALL = '*';
+
+    final public const ACTION_CREATE = 'create*';
+
+    final public const ACTION_READ = 'read*';
+
+    final public const ACTION_UPDATE = 'update*';
+
+    final public const ACTION_DELETE = 'delete*';
+
+        */
+
+
+
+
+        foreach ($this->permissions[$pathId] as $k => $v) {
+            if($k == '*') {
+                return AccessType::getByName($v);
+            }
         }
-
-        return match ($action) {
-            'create' => $this->getPagePermission($pathId)->createAllowed(),
-            'update' => $this->getPagePermission($pathId)->updateAllAllowed(),
-            'delete' => $this->getPagePermission($pathId)->deleteAllAllowed(),
-            default => $this->getPagePermission($pathId)->readAllAllowed(),
-        };
-    }
-
-    public function getPermission(int $pathId, string $action): int
-    {
-        throw new InvalidArgumentException("gibt es nicht");
+        return AccessType::VORBIDDEN;
     }
 }
