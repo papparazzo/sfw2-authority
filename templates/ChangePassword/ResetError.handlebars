@@ -1,3 +1,27 @@
+{{!
+
+/**
+ *  SFW2 - SimpleFrameWork
+ *
+ *  Copyright (C) 2024  Stefan Paproth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/agpl.txt>.
+ *
+ */
+
+}}
+
 <div class="py-md-5 mx-auto">
     <div class="alert alert-danger" role="alert">
         <h3 class="mb-4">Achtung: </h3>
@@ -5,14 +29,13 @@
             Das Passwort kann nicht zurückgesetzt werden! Dies kann mehrere Ursachen haben:
         </p>
         <ul>
-            <li>Es wurden ein ungültiger Hash übergeben.</li>
-            <li>Es wurde ein fehlerhafter Hash übergeben.</li>
+            <li>Es wurden ungültige Daten übermittelt.</li>
             <li>Das Password wurde bereits zurückgesetzt.</li>
             <li>Es ist ein interner Fehler aufgetreten.</li>
             <li>Das Ablaufdatum wurde überschritten. Bitte achte darauf das Du innerhalb von <strong>{{expire}}</strong> reagierst!</li>
         </ul>
         <p>
-            Versuche es bitte erneut. Sollte das Problem weiterhin bestehen dann melde Dich bitte.
+            Versuche es bitte erneut. Sollte das Problem weiterhin bestehen dann melde dich bitte.
         </p>
     </div>
 </div>

@@ -26,6 +26,7 @@ use Exception;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 use SFW2\Authority\User;
@@ -36,6 +37,9 @@ class Authentication extends AbstractController
 {
     protected User $user;
 
+    /**
+     * @throws HttpForbidden
+     */
     public function __construct(
         protected SessionInterface  $session,
         protected DatabaseInterface $database,
@@ -68,7 +72,7 @@ class Authentication extends AbstractController
         $data = [];
         $data['user_name'] = $this->user->getFirstName();
         $data['user_id'] = $this->user->getUserId();
-        $data['authenticated'] = $this->user->isAuthenticated();;
+        $data['authenticated'] = $this->user->isAuthenticated();
 
         $request = $request->withAttribute('sfw2_authority', $data);
         return $responseEngine->render($request, [

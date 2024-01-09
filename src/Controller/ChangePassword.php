@@ -46,6 +46,9 @@ class ChangePassword extends AbstractController {
 
     protected User $user;
 
+    /**
+     * @throws HttpForbidden
+     */
     public function __construct(
         private readonly DatabaseInterface $database,
         private readonly SessionInterface $session
