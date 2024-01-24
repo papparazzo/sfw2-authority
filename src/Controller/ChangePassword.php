@@ -96,13 +96,6 @@ class ChangePassword extends AbstractController {
         return $responseEngine->render($request);
     }
 
-
-
-
-
-
-
-
     public function confirm(Request $request, ResponseEngine $responseEngine): Response
     {
         $hash = (string)filter_input(INPUT_GET, 'hash');
