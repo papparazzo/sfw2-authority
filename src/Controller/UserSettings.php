@@ -77,7 +77,7 @@ class UserSettings extends AbstractController {
     }
 
     protected function getUsers() : array {
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `user`.`FirstName`, `user`.`LastName`, `user`.`Sex`, `user`.`LoginName`, " .
             "IF(`user`.`Birthday` = '0000-00-00', '', `user`.`Birthday`) AS `Birthday`, `user`.`Email`, " .
             "`user`.`Phone1`, `user`.`Phone2`, `position`.`Position`, `division`.`Alias`, `user`.`Active` " .
@@ -105,8 +105,7 @@ class UserSettings extends AbstractController {
         $this->ctrl->addJSFile('profile');
         $userid = $this->ctrl->getUserId();
 
-
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `sfw_user`.`Id`, " .
             "CONCAT(`sfw_user`.`LastName`, ', ', `sfw_user`.`FirstName`) " .
             "AS `Name`" .
@@ -118,7 +117,7 @@ class UserSettings extends AbstractController {
             ...$this->db->select($stmt)
         ];
 
-        $stmt =
+        $stmt = /** @lang MySQL */
             "SELECT `sfw_position`.`Id`, `sfw_position`.`Position`, " .
             "`sfw_division`.`Name` AS `Division`, `sfw_position`.`UserId` " .
             "FROM `sfw_position` " .
@@ -194,14 +193,14 @@ class UserSettings extends AbstractController {
             }
 
             if($tmp['Position'] == -1) {
-                $stmt =
+                $stmt = /** @lang MySQL */
                     "UPDATE `sfw_position` " .
                     "SET `UserId` = '%s' " .
                     "WHERE `UserId` = '%s' ";
 
                 $params = array('-1', $userid);
             } else {
-                $stmt =
+                $stmt = /** @lang MySQL */
                     "UPDATE `sfw_position` " .
                     "SET `UserId` = '%s' " .
                     "WHERE `Id` = '%s' ";
