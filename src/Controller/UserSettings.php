@@ -80,12 +80,8 @@ class UserSettings extends AbstractController {
         $stmt = /** @lang MySQL */
             "SELECT `user`.`FirstName`, `user`.`LastName`, `user`.`Sex`, `user`.`LoginName`, " .
             "IF(`user`.`Birthday` = '0000-00-00', '', `user`.`Birthday`) AS `Birthday`, `user`.`Email`, " .
-            "`user`.`Phone1`, `user`.`Phone2`, `position`.`Position`, `division`.`Alias`, `user`.`Active` " .
-            "FROM `{TABLE_PREFIX}_user` AS `user` " .
-            "LEFT JOIN `{TABLE_PREFIX}_position` AS `position` " .
-            "ON `position`.`UserId` = `user`.`Id` " .
-            "LEFT JOIN `{TABLE_PREFIX}_division` AS `division` " .
-            "ON `division`.`Id` = `position`.`DivisionId` ";
+            "`user`.`Phone1`, `user`.`Phone2`, `user`.`Active` " .
+            "FROM `{TABLE_PREFIX}_authority_user` AS `user` ";
 
         $data = $this->database->selectRow($stmt);
         $data['Birthday'] = $this->database->convertFromMysqlDate($data['Birthday']);
@@ -125,7 +121,7 @@ class UserSettings extends AbstractController {
             "ON `sfw_division`.`DivisionId` = `sfw_position`.`DivisionId` " .
             "LEFT JOIN `sfw_user` " .
             "ON `sfw_user`.`id` = `sfw_position`.`UserId` " .
-            "WHERE `sfw_position`.`UserId` IN('-1', '%s') ";
+            "WHERE `sfw_position`.`UserId` IN('-1', %s) ";
 
         $positions = [];
         $positions = [
@@ -175,8 +171,8 @@ class UserSettings extends AbstractController {
             $tmp['Position' ] = $this->dto->getId('position', true, 'Die Position');
 
             $add = [];
-            $add[] = "`sfw_position`.`id` = '%s'";
-            $add[] = "`sfw_position`.`UserId` IN('-1', '%s') ";
+            $add[] = "`sfw_position`.`id` = %s";
+            $add[] = "`sfw_position`.`UserId` IN('-1', %s) ";
 
             $cnt = $this->db->selectCount(
                 'sfw_position',
@@ -195,15 +191,15 @@ class UserSettings extends AbstractController {
             if($tmp['Position'] == -1) {
                 $stmt = /** @lang MySQL */
                     "UPDATE `sfw_position` " .
-                    "SET `UserId` = '%s' " .
-                    "WHERE `UserId` = '%s' ";
+                    "SET `UserId` = %s " .
+                    "WHERE `UserId` = %s ";
 
                 $params = array('-1', $userid);
             } else {
                 $stmt = /** @lang MySQL */
                     "UPDATE `sfw_position` " .
-                    "SET `UserId` = '%s' " .
-                    "WHERE `Id` = '%s' ";
+                    "SET `UserId` = %s " .
+                    "WHERE `Id` = %s ";
 
                 $params = array($userid, $tmp['Position']);
             }
@@ -216,8 +212,8 @@ class UserSettings extends AbstractController {
 
             if($tmp['LoginName'] != '') {
                 $add = [];
-                $add[] = "`sfw_user`.`id` != '%s'";
-                $add[] = "`sfw_user`.`LoginName` = '%s'";
+                $add[] = "`sfw_user`.`id` != %s";
+                $add[] = "`sfw_user`.`LoginName` = %s";
 
                 $cnt = $this->db->selectCount(
                     'sfw_user',
@@ -246,13 +242,13 @@ class UserSettings extends AbstractController {
         }
 
         $stmt .=
-            "`Sex` = '%s'," .
-            "`FirstName` = '%s', " .
-            "`LastName` = '%s', " .
-            "`Email` = '%s', " .
-            "`Phone1` = '%s', " .
-            "`Phone2` = '%s', " .
-            "`Birthday` = '%s'";
+            "`Sex` = %s," .
+            "`FirstName` = %s, " .
+            "`LastName` = %s, " .
+            "`Email` = %s, " .
+            "`Phone1` = %s, " .
+            "`Phone2` = %s, " .
+            "`Birthday` = %s";
 
         $params = [];
         $params[] = $tmp['Sex'      ];
@@ -266,8 +262,8 @@ class UserSettings extends AbstractController {
 
         if($this->ctrl->isAdmin()) {
             $stmt .=
-                ", `Active` = '%s'" .
-                ", `LoginName` = '%s'";
+                ", `Active` = %s" .
+                ", `LoginName` = %s";
             $params[] = $tmp['Active'   ];
             $params[] = $tmp['LoginName'];
         }
@@ -277,7 +273,7 @@ class UserSettings extends AbstractController {
         $params[] = $userid;
 
         if($userid != -1) {
-            $stmt .=  "WHERE `sfw_user`.`id` = '%s'";
+            $stmt .=  "WHERE `sfw_user`.`id` = %s";
         }
 
         $this->db->update($stmt, $params);
