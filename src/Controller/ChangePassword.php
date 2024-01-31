@@ -39,7 +39,6 @@ use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Validator\Validators\IsSameAs;
 
-
 class ChangePassword extends AbstractController {
 
     use LoginHelperTrait;
