@@ -53,7 +53,7 @@ class ChangePassword extends AbstractController {
         private readonly SessionInterface $session
     )
     {
-        $userId = $this->session->getGlobalEntry(User::class, 0);
+        $userId = $this->session->getGlobalEntry(User::class);
         $this->user = new User($this->database, $userId);
     }
 
