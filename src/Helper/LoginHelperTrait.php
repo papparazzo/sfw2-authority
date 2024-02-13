@@ -22,7 +22,8 @@
 
 namespace SFW2\Authority\Helper;
 
-trait LoginHelperTrait {
+trait LoginHelperTrait
+{
 
     protected static int $EXPIRE_DATE_OFFSET = 86400; #24 * 60 * 60;
 
