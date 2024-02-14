@@ -1,0 +1,69 @@
+{{!
+
+/**
+ *  SFW2 - SimpleFrameWork
+ *
+ *  Copyright (C) 2024  Stefan Paproth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/agpl.txt>.
+ *
+ */
+
+}}
+<div class="modal-content">
+    <div class="modal-header sfw2-no-border">
+        <h1 class="modal-title fs-5">Anmelden</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <form id="sfw2-login-form">
+            <div class="row">
+                <label for="sfw2-login-input-user" class="col-sm-4 col-form-label text-body-secondary">Benutzername</label>
+                <div class="col-sm-7">
+                    <input
+                        id="sfw2-login-input-user"
+                        type="text"
+                        class="form-control form-control-sm"
+                        name="usr"
+                        value=""
+                    />
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+            <div class="row">
+                <label for="sfw2-login-input-password" class="col-sm-4 col-form-label text-body-secondary">Passwort</label>
+                <div class="col-sm-7">
+                    <input
+                        id="sfw2-login-input-password"
+                        type="password"
+                        class="form-control form-control-sm sfw2-submit-on-enter"
+                        name="pwd"
+                        value=""
+                    />
+                    <div class="invalid-feedback"></div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer sfw2-no-border">
+        <button
+            type="button"
+            class="btn btn-secondary sfw2-button-send"
+            data-sfw2-form-id="#sfw2-login-form"
+            data-sfw2-url="/authentication" {{!TODO No Hardlinks!}}
+        >
+            anmelden
+        </button>
+    </div>
+</div>
