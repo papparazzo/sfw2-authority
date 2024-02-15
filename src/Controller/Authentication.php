@@ -33,7 +33,7 @@ use SFW2\Authority\User;
 use SFW2\Routing\ResponseEngine;
 use SFW2\Session\SessionInterface;
 
-class Authentication extends AbstractController
+final class Authentication extends AbstractController
 {
     protected User $user;
 
