@@ -61,6 +61,8 @@ class ChangePassword extends AbstractController {
      * @param Request $request
      * @param ResponseEngine $responseEngine
      * @return Response
+     * @throws HttpBadRequest
+     * @throws Exception
      * @throws HttpForbidden
      */
     public function index(Request $request, ResponseEngine $responseEngine): Response
