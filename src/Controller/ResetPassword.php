@@ -38,6 +38,7 @@ use SFW2\Routing\ResponseEngine;
 
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
+use SFW2\Validator\Validators\IsEMailAddress;
 use SFW2\Validator\Validators\IsNotEmpty;
 
 
@@ -66,7 +67,7 @@ class ResetPassword extends AbstractController
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
         $rulset = new Ruleset();
-        $rulset->addNewRules('user', new IsNotEmpty());
+        $rulset->addNewRules('user', new IsNotEmpty(), new IsEMailAddress());
 
         $validator = new Validator($rulset);
         $values = [];
