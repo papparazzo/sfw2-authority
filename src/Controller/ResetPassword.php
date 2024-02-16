@@ -47,10 +47,7 @@ class ResetPassword extends AbstractController
 {
     use LoginHelperTrait;
 
-    /**
-     * @var string
-     */
-    protected string $loginChangePath = '';
+    private string $loginChangePath;
 
     public function __construct(
         private readonly DatabaseInterface $database,
