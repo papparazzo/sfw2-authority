@@ -116,10 +116,10 @@ class ResetPassword extends AbstractController
             'title' => 'Passwort rücksetzen',
             'description' => "
                 <p>
-                    Bestätigungsnachricht wurde erfolgreich an <strong>$userName</strong> verschickt.
+                    Bestätigungsnachricht wurde erfolgreich verschickt.
                 </p>
                 <p>
-                    Bitte klicke auf den Bestätigungslink den du per E-Mail erhälst
+                    Bitte klicke auf den Bestätigungslink den du per E-Mail erhälst 
                     um dein neues Passwort eingeben zu können.
                 </p>
                 <p>
