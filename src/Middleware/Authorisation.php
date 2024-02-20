@@ -43,7 +43,7 @@ class Authorisation implements MiddlewareInterface
         }
 
         $userId = $this->session->getGlobalEntry(User::class);
-        $user = new User($this->database, $userId);
+        $user = (new User($this->database))->loadUserById($userId);
 
         $data['user_id'      ] = $user->getUserId();
         $data['authenticated'] = $user->isAuthenticated();
