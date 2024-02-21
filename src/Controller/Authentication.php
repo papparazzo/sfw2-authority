@@ -35,18 +35,12 @@ use SFW2\Session\SessionInterface;
 
 final class Authentication extends AbstractController
 {
-    protected User $user;
-
-    /**
-     * @throws HttpForbidden
-     */
     public function __construct(
         protected SessionInterface  $session,
         protected DatabaseInterface $database,
         protected ?string           $loginResetPath = null
     )
     {
-        $this->user = new User($this->database);
     }
 
     /**
