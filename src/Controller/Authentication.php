@@ -48,31 +48,36 @@ final class Authentication extends AbstractController
      */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-        $error = !$this->user->authenticateUser(
+        if(isset($request->getQueryParams()['getForm'])) {
+            return $responseEngine->render($request, [], 'SFW2\\Authority\\Authentication\\LoginForm');
+        }
+
+        $auth = new Authenticator($this->database);
+        $user = $auth->authenticateUser(
             (string)filter_input(INPUT_POST, 'usr'),
             (string)filter_input(INPUT_POST, 'pwd')
         );
 
-        if ($error) {
+        if (!$user->isAuthenticated()) {
             $values['pwd']['hint'] = 'Es wurden ungültige Daten übermittelt!';
             $values['usr']['hint'] = ' ';
             $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
             return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
-        $this->session->setGlobalEntry(User::class, $this->user->getUserId());
+        $this->session->setGlobalEntry(User::class, $user->getUserId());
         $this->session->regenerateSession();
 
         $data = [];
-        $data['user_name'] = $this->user->getFirstName();
-        $data['user_id'] = $this->user->getUserId();
-        $data['authenticated'] = $this->user->isAuthenticated();
+        $data['user_name'] = $user->getFirstName();
+        $data['user_id'] = $user->getUserId();
+        $data['authenticated'] = $user->isAuthenticated();
 
         $request = $request->withAttribute('sfw2_authority', $data);
         return $responseEngine->render($request, [
             'title' => 'Anmelden',
             'description' =>
-                "Hallo <strong>{$this->user->getFirstName()}</strong>,<br />
+                "Hallo <strong>{$user->getFirstName()}</strong>,<br />
                 du wurdest erfolgreich angemeldet. Zum Abmelden klicke bitte oben rechts auf <strong>abmelden</strong>",
             'reload' => true
         ]);
