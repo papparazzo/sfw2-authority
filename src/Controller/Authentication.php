@@ -26,7 +26,7 @@ use Exception;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use SFW2\Core\HttpExceptions\HttpForbidden;
+use SFW2\Authority\Authenticator;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 use SFW2\Authority\User;
