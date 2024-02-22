@@ -85,7 +85,6 @@ final class Authentication extends AbstractController
 
     public function logout(Request $request, ResponseEngine $responseEngine): Response
     {
-        $this->user->reset();
         $this->session->delGlobalEntry(User::class);
         $this->session->regenerateSession();
         return $responseEngine->render($request, [
