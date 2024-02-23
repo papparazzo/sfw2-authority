@@ -66,6 +66,10 @@ class ResetPassword extends AbstractController
      */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
+        if(isset($request->getQueryParams()['getForm'])) {
+            return $responseEngine->render($request, [], 'SFW2\\Authority\\ResetPassword\\ResetPasswordForm');
+        }
+
         $rulset = new Ruleset();
         $rulset->addNewRules('user', new IsNotEmpty(), new IsEMailAddress());
 
