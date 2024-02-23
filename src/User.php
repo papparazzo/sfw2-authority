@@ -53,11 +53,11 @@ class User
     /**
      * @throws HttpForbidden
      */
-    public function loadUserById(?int $userId): void
+    public function loadUserById(?int $userId): static
     {
         if (is_null($userId)) {
             $this->reset();
-            return;
+            return $this;
         }
 
         $stmt = /** @lang MySQL */
