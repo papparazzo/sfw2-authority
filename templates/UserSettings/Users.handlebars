@@ -1,0 +1,96 @@
+{{!
+/**
+ *  SFW - SimpleFrameWork
+ *
+ *  Copyright (C) 2015  Stefan Paproth
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Affero General Public License as
+ *  published by the Free Software Foundation, either version 3 of the
+ *  License, or (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ *  GNU Affero General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Affero General Public License
+ *  along with this program. If not, see <http://www.gnu.org/licenses/agpl.txt>.
+ *
+ */
+}}
+
+<div>
+    <div style="overflow-x: auto;">
+        <h4 class="mb-3 text-decoration-underline">Users</h4>
+        <p>
+            {{caption}}
+        </p>
+        {{#if create_allowed}}
+        <div class="pt-3 pb-5">
+            <button
+                type="button"
+                class="btn btn-secondary sfw2-create-button"
+                data-sfw2-form-id="#{{sfw2_routing.path_simplified}}"
+                data-sfw2-url="{{sfw2_routing.path}}?do=create"
+            >
+                Neuen User anlegen...
+            </button>
+        </div>
+        {{/if}}
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th title="User kann sich einloggen">Login</th>
+                    <th title="User hat administrative Rechte">Admin</th>
+                    <th>Vorname</th>
+                    <th>Nachname</th>
+                    <th>Straße</th>
+                    <th>Hausnummer</th>
+                    <th>Postleitzahl</th>
+                    <th>Ort</th>
+                    <th>Telefon</th>
+                    <th>E-Mail</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody class="text-nowrap">
+                {{#each entries}}
+                <tr>
+                    <td>{{Id}}</td>
+                    <td><i class="bi {{#if Active}}bi-person-check{{else}}bi-person-x{{/if}}"></i></td>
+                    <td>{{#if Admin}}<i class="bi bi-person-gear"></i>{{/if}}</td>
+                    <td>{{FirstName}}</td>
+                    <td>{{LastName}}</td>
+                    <td><a class="text-reset" href="https://www.google.de/maps/place/{{Street}}+{{HouseNumber}},+{{PostalCode}}+{{City}}">{{Street}}</a></td>
+                    <td>{{HouseNumber}}</td>
+                    <td>{{PostalCode}}</td>
+                    <td>{{City}}</td>
+                    <td><a class="text-reset" href="tel:{{Phone}}">{{Phone}}</a></td>
+                    <td><a class="text-reset" href="mailto:{{Email}}">{{Email}}</a></td>
+                    <td>
+                        {{#if delete_allowed}}
+                        <input type="hidden" id="{{../sfw2_routing.path_simplified}}_title_{{id}}" value="{{date}} {{time}} - {{description}}" />
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-light sfw2-delete-button"
+                            data-sfw2-url="{{../sfw2_routing.path}}?do=delete"
+                            data-sfw2-item-id="{{id}}"
+                            data-sfw2-form-id="#{{../sfw2_routing.path_simplified}}"
+                        >
+                            <i class="bi bi-trash3"></i>
+                        </button>
+                        {{/if}}
+                    </td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+        {{#if modificationDate}}
+        <div class="modificationDate">
+            Stand: <time pubdate="pubdate">{{modificationDate}}</time>
+        </div>
+        {{/if}}
+    </div>
+</div>
