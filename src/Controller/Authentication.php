@@ -85,6 +85,10 @@ final class Authentication extends AbstractController
 
     public function logout(Request $request, ResponseEngine $responseEngine): Response
     {
+        if(isset($request->getQueryParams()['getForm'])) {
+            return $responseEngine->render($request, [], 'SFW2\\Authority\\Authentication\\LogoutForm');
+        }
+
         $this->session->delGlobalEntry(User::class);
         $this->session->regenerateSession();
         return $responseEngine->render($request, [
