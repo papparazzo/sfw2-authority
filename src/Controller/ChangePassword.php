@@ -53,8 +53,6 @@ class ChangePassword extends AbstractController {
         private readonly SessionInterface $session
     )
     {
-        $userId = $this->session->getGlobalEntry(User::class);
-        $this->user = new User($this->database, $userId);
     }
 
     /**
@@ -67,8 +65,8 @@ class ChangePassword extends AbstractController {
      */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
-        if(!$this->user->isAuthenticated()) {
-            throw new HttpForbidden();
+        if($this->isFormRequest($request)) {
+            return $this->getForm($request, $responseEngine);
         }
 
         $rulset = new Ruleset();
