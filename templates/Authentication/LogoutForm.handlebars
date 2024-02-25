@@ -21,21 +21,21 @@
  */
 
 }}
-
-<div class="py-md-5 mx-auto">
-    <div class="alert alert-danger" role="alert">
-        <h3 class="mb-4">Achtung: </h3>
-        <p>
-            Das Passwort kann nicht zurückgesetzt werden! Dies kann mehrere Ursachen haben:
-        </p>
-        <ul>
-            <li>Es wurden ungültige Daten übermittelt.</li>
-            <li>Das Password wurde bereits zurückgesetzt.</li>
-            <li>Es ist ein interner Fehler aufgetreten.</li>
-            <li>Das Ablaufdatum wurde überschritten. Bitte achte darauf das Du innerhalb von <strong>{{expire}}</strong> reagierst!</li>
-        </ul>
-        <p>
-            Versuche es bitte erneut. Sollte das Problem weiterhin bestehen dann melde dich bitte.
-        </p>
+<div class="modal-content">
+    <div class="modal-header sfw2-no-border">
+        <h1 class="modal-title fs-5">Abmelden</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        Du bist zur Zeit als <strong>{{sfw2_authority.user_name}}</strong> angemeldet. Möchtest du dich abmelden?
+    </div>
+    <div class="modal-footer sfw2-no-border">
+        <button
+            type="button"
+            class="btn btn-secondary sfw2-button-send"
+            data-sfw2-url="/authentication?do=logout" {{!TODO No Hardlinks!}}
+        >
+            abmelden
+        </button>
     </div>
 </div>
