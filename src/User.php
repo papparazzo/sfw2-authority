@@ -151,14 +151,14 @@ class User
         return $cnt == 1;
     }
 
-    public function reset(): void
+    public function reset(): static
     {
-        $this->authenticated = false;
         $this->firstName = '';
         $this->lastName = '';
         $this->mailAddr = '';
         $this->userid = null;
         $this->isAdmin = false;
+        return $this;
     }
 
     public function isAuthenticated(): bool
