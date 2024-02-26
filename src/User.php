@@ -151,6 +151,18 @@ class User
         return $cnt == 1;
     }
 
+     * `Sex` ENUM('FEMALE','MALE','DIVERSE') COLLATE utf8_unicode_ci DEFAULT NULL,
+     * `Birthday` DATE DEFAULT NULL,
+     * `Email` VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL,
+     * `Phone` VARCHAR(25) COLLATE utf8_unicode_ci NOT NULL,
+     *
+     * Straße
+     * Hausnummer
+     * Plz
+     * Ort
+     *
+     */
+
     public function reset(): static
     {
         $this->firstName = '';
@@ -183,7 +195,7 @@ class User
 
     public function getFullName(): string
     {
-        return "$this->firstName $this->lastName";
+        return trim("$this->firstName $this->lastName");
     }
 
     public function getMailAddr(): string
