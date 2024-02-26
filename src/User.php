@@ -51,7 +51,7 @@ class User
     }
 
     /**
-     * @throws HttpForbidden
+     * @throws Exception
      */
     public function loadUserById(?int $userId): static
     {
@@ -69,7 +69,7 @@ class User
         $rv = $this->database->selectRow($stmt, [$userId]);
 
         if (empty($rv)) {
-            throw new HttpForbidden();
+            throw new Exception("no user found with id <$userId>");
         }
         $this->extracted($rv);
     }
