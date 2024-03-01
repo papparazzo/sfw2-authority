@@ -101,12 +101,17 @@ class ResetPassword extends AbstractController
         }
 
         $expireDate = $this->getExpireDate(self::$EXPIRE_DATE_OFFSET);
-        $userName = trim($row['Name']);
+
+        $protocol = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === 'on') ? 'https://' : 'http://';
+        $domain = filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN);
+        $link =
+            $protocol . $domain .
+            '?getForm=' . urldecode($this->loginChangePath) . '&hash=' . urlencode($hash) . '#page-content-start';
 
         $data = [
             'name' => $user->getFullName(),
             'hash' => $hash,
-            'path' => 'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash",
+            'link' => $link,
             'expire' => $expireDate
         ];
 
