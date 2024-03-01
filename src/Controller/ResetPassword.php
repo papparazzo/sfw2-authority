@@ -45,6 +45,7 @@ use SFW2\Validator\Validators\IsNotEmpty;
 
 
 use SFW2\Authority\Helper\LoginHelperTrait;
+use Throwable;
 
 class ResetPassword extends AbstractController
 {
@@ -87,11 +88,13 @@ class ResetPassword extends AbstractController
         }
 
         $user = $values['user']['value'];
-        $hash = $this->getHash($user);
+        $time = $this->dateTimeHelper->getDateTimeObject(time() + self::$EXPIRE_DATE_OFFSET);
+
+        $auth = new Authenticator($this->database);
+        $hash = $auth->getHash($user, $time);
 
         if(is_null($hash)) {
-            // No hints on non exsiting user...
-            return $responseEngine->render($request);
+            return $this->returnError($request, $responseEngine);
         }
 
         try {
@@ -142,26 +145,15 @@ class ResetPassword extends AbstractController
         ]);
     }
 
-    /**
-     * @throws Exception
-     */
-    protected function getHash(string $user): ?string
+    protected function returnError(Request $request, ResponseEngine $responseEngine): Response
     {
-        $hash = uniqid(more_entropy: true);
-
-        $stmt = /** @lang MySQL */
-            "UPDATE `{TABLE_PREFIX}_authority_user` " .
-            "SET `ResetExpireDate` = %s, `ResetHash` = %s " .
-            "WHERE `LoginName` = %s ";
-
-
-        $time = $this->dateTimeHelper->getDateTimeObject(time() + self::$EXPIRE_DATE_OFFSET);
-        $val = $this->database->update($stmt, [$time, $hash, $user]);
-
-        if($val !== 1) {
-            return null;
-        }
-
-        return $hash;
+        $values = [
+            'user' => [
+                'hint' => 'Ungültiger Benutzername übergeben!',
+                'value' => ''
+            ]
+        ];
+        $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+        return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
     }
 }
