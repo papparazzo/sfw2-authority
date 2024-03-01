@@ -27,6 +27,8 @@ use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
+use SFW2\Authority\Authenticator;
+use SFW2\Authority\User;
 use SFW2\Core\Utils\DateTimeHelper;
 use SFW2\Core\Utils\Mailer;
 
@@ -92,25 +94,24 @@ class ResetPassword extends AbstractController
             return $responseEngine->render($request);
         }
 
-        $stmt = /** @lang MySQL */
-            "SELECT CONCAT(`FirstName`, ' ', `LastName`) AS `Name`, Email " .
-            "FROM `{TABLE_PREFIX}_authority_user` " .
-            "WHERE `LoginName` = %s";
-
-        $row = $this->database->selectRow($stmt, [$user]);
+        try {
+            $user = (new User($this->database))->loadUserByEmailAddress($user);
+        } catch(Throwable) {
+            return $this->returnError($request, $responseEngine);
+        }
 
         $expireDate = $this->getExpireDate(self::$EXPIRE_DATE_OFFSET);
         $userName = trim($row['Name']);
 
         $data = [
-            'name' => $userName,
+            'name' => $user->getFullName(),
             'hash' => $hash,
             'path' => 'https://' . filter_var($_SERVER['HTTP_HOST'], FILTER_VALIDATE_DOMAIN) . $this->loginChangePath . "?do=confirm&hash=$hash",
             'expire' => $expireDate
         ];
 
         $this->mailer->send(
-            $row['Email'],
+            $user->getMailAddr(),
             'Neues Passwort',
             'SFW2\\Authority\\ResetPassword\\ConfirmPasswordResetEmail',
             $data
