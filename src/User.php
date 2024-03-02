@@ -22,14 +22,11 @@
 
 namespace SFW2\Authority;
 
-use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Database\DatabaseInterface;
+use SFW2\Validator\Exception;
 
 class User
 {
-
-    private const MAX_RETRIES = 100;
-
     protected ?int $userid        = null;
 
     protected bool $isAdmin       = false;
@@ -40,14 +37,8 @@ class User
 
     protected string $mailAddr    = '';
 
-    protected bool $authenticated = false;
-
-    /**
-     * @throws HttpForbidden
-     */
-    public function __construct(protected readonly DatabaseInterface $database, ?int $userId = null)
+    public function __construct(protected readonly DatabaseInterface $database)
     {
-        $this->loadUserById($userId);
     }
 
     /**
