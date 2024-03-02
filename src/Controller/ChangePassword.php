@@ -25,6 +25,8 @@ namespace SFW2\Authority\Controller;
 use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use SFW2\Authority\Authenticator;
+use SFW2\Core\HttpExceptions\HttpBadRequest;
 use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
@@ -32,8 +34,10 @@ use SFW2\Routing\AbstractController;
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
 
+use SFW2\Routing\HelperTraits\getRequestTypeTrait;
 use SFW2\Routing\ResponseEngine;
 use SFW2\Session\SessionInterface;
+use SFW2\Validator\Exception;
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
 use SFW2\Validator\Validators\ContainsLowerChars;
@@ -48,12 +52,8 @@ use SFW2\Validator\Validators\IsSameAs;
 class ChangePassword extends AbstractController {
 
     use LoginHelperTrait;
+    use getRequestTypeTrait;
 
-    protected User $user;
-
-    /**
-     * @throws HttpForbidden
-     */
     public function __construct(
         private readonly DatabaseInterface $database,
         private readonly SessionInterface $session
@@ -93,9 +93,8 @@ class ChangePassword extends AbstractController {
         $validator = new Validator($rulset);
         $values = [];
 
-        $error = !$validator->validate($_POST, $values);
-
-        if($error) {
+        $success = $validator->validate($_POST, $values);
+        if(!$success) {
             $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
             return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
