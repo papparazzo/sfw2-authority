@@ -36,7 +36,13 @@ use SFW2\Routing\ResponseEngine;
 use SFW2\Session\SessionInterface;
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
+use SFW2\Validator\Validators\ContainsLowerChars;
+use SFW2\Validator\Validators\ContainsNumbers;
+use SFW2\Validator\Validators\ContainsSpecialChars;
+use SFW2\Validator\Validators\ContainsUpperChars;
+use SFW2\Validator\Validators\HasMinLength;
 use SFW2\Validator\Validators\IsNotEmpty;
+use SFW2\Validator\Validators\IsNotSameAs;
 use SFW2\Validator\Validators\IsSameAs;
 
 class ChangePassword extends AbstractController {
@@ -70,7 +76,17 @@ class ChangePassword extends AbstractController {
         }
 
         $rulset = new Ruleset();
-        $rulset->addNewRules('pwd', new IsNotEmpty(), new IsSameAs($_POST['pwdr']));
+        $rulset->addNewRules(
+            'pwd',
+            new IsNotEmpty(),
+            new HasMinLength(8),
+            new IsSameAs($_POST['pwdr']),
+            new ContainsNumbers(2),
+            new ContainsLowerChars(2),
+            new ContainsSpecialChars(2),
+            new ContainsUpperChars(2)
+        );
+
         $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
         $rulset->addNewRules('oldpwd', new IsNotEmpty());
 
