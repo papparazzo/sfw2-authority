@@ -12,6 +12,7 @@ use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Core\HttpExceptions\HttpNotFound;
 use SFW2\Core\Permission\AccessType;
 use SFW2\Core\Permission\PermissionInterface;
+use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 use SFW2\Session\SessionInterface;
@@ -31,6 +32,7 @@ class Authorisation implements MiddlewareInterface
 
     /**
      * @throws HttpForbidden|HttpNotFound
+     * @throws DatabaseException
      * @throws Exception
      */
     public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface
