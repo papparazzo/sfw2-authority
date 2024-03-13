@@ -26,6 +26,7 @@ use SFW2\Authority\User;
 use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Core\Permission\AccessType;
 use SFW2\Core\Permission\PermissionInterface;
+use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Session\SessionInterface;
 
@@ -52,6 +53,9 @@ final class Permission implements PermissionInterface
         $this->loadPermissions(0, $this->getInitPermission($roles), $roles);
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function getRoles(?int $userId): array
     {
         if (is_null($userId)) {
@@ -69,6 +73,9 @@ final class Permission implements PermissionInterface
         return $roles;
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function getInitPermission(array $roles): array
     {
         return
@@ -80,6 +87,9 @@ final class Permission implements PermissionInterface
             );
     }
 
+    /**
+     * @throws DatabaseException
+     */
     private function loadPermissions(int $parentPathId, $initPermission, array $roles): void
     {
         $stmt = /** @lang MySQL */
