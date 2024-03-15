@@ -28,6 +28,7 @@ use SFW2\Core\Permission\AccessType;
 use SFW2\Core\Permission\PermissionInterface;
 use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
+use SFW2\Database\QueryHelper;
 use SFW2\Session\SessionInterface;
 
 final class Permission implements PermissionInterface
@@ -78,8 +79,9 @@ final class Permission implements PermissionInterface
      */
     private function getInitPermission(array $roles): array
     {
+        $queryHelper = new QueryHelper($this->database);
         return
-            $this->permissions[0] = $this->database->selectKeyValue(
+            $this->permissions[0] = $queryHelper->selectKeyValue(
                 'Action',
                 'Access',
                 '{TABLE_PREFIX}_authority_permission',
@@ -99,8 +101,10 @@ final class Permission implements PermissionInterface
 
         $rows = $this->database->select($stmt, [$parentPathId]);
 
+        $queryHelper = new QueryHelper($this->database);
+
         foreach ($rows as $row) {
-             $subRow = $this->database->selectKeyValue(
+             $subRow = $queryHelper->selectKeyValue(
                 'Action',
                 'Access',
                 '{TABLE_PREFIX}_authority_permission',
