@@ -40,7 +40,9 @@ class Authorisation implements MiddlewareInterface
         $pathId = $this->getPathId($request);
         $action = $this->getAction($request);
 
-        if ($this->permission->checkPermission($pathId, $action) === AccessType::VORBIDDEN) {
+        $permission = $this->permission->checkPermission($pathId, $action);
+
+        if ($permission === AccessType::VORBIDDEN) {
             throw new HttpForbidden();
         }
 
@@ -50,6 +52,7 @@ class Authorisation implements MiddlewareInterface
         $data['user_id'      ] = $user->getUserId();
         $data['authenticated'] = $user->isAuthenticated();
         $data['user_name'    ] = $user->getFullName();
+        $data['restricted'   ] = $permission === AccessType::RESTRICTED;
 
         $request = $request->withAttribute('sfw2_authority', $data);
 
