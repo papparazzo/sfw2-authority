@@ -23,7 +23,6 @@
 namespace SFW2\Authority\Permission;
 
 use SFW2\Authority\User;
-use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Core\Permission\AccessType;
 use SFW2\Core\Permission\PermissionInterface;
 use SFW2\Database\DatabaseException;
@@ -38,10 +37,12 @@ final class Permission implements PermissionInterface
     private array $permissions = [];
 
     /**
-     * @throws HttpForbidden
+     * @throws DatabaseException
      */
-    public function __construct(SessionInterface $session, private readonly DatabaseInterface $database)
-    {
+    public function __construct(
+        SessionInterface $session,
+        private readonly DatabaseInterface $database
+    ) {
         $userId = $session->getGlobalEntry(User::class);
 
         $this->isAdmin = (new User($this->database, $userId))->isAdmin();
