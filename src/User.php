@@ -24,6 +24,7 @@ namespace SFW2\Authority;
 
 use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
+use SFW2\Database\QueryHelper;
 use SFW2\Validator\Exception;
 
 class User
@@ -59,7 +60,8 @@ class User
             "WHERE `Id` = %s " .
             "AND `Active` = '1'";
 
-        $rv = $this->database->selectRow($stmt, [$userId]);
+        $queryHelper = new QueryHelper($this->database);
+        $rv = $queryHelper->selectRow($stmt, [$userId]);
 
         if (empty($rv)) {
             throw new Exception("no user found with id <$userId>");
