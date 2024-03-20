@@ -22,6 +22,7 @@
 
 namespace SFW2\Authority;
 
+use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Validator\Exception;
 
@@ -43,6 +44,7 @@ class User
 
     /**
      * @throws Exception
+     * @throws DatabaseException
      */
     public function loadUserById(?int $userId): static
     {
@@ -65,7 +67,11 @@ class User
         $this->extracted($rv);
     }
 
-    public function authenticateUser(string $loginName, string $pwd): bool
+    /**
+     * @throws Exception
+     * @throws DatabaseException
+     */
+    public function loadUserByEmailAddress(string $userName): static
     {
         $this->reset();
         $stmt = /** @lang MySQL */
