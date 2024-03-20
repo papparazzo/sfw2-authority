@@ -88,7 +88,10 @@ class ChangePassword extends AbstractController {
         );
 
         $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
-        $rulset->addNewRules('oldpwd', new IsNotEmpty());
+        if(!isset($_POST['hash'])) {
+            $rulset->addNewRules('pwd', new IsNotSameAs($_POST['oldpwd']));
+            $rulset->addNewRules('oldpwd', new IsNotEmpty());
+        }
 
         $validator = new Validator($rulset);
         $values = [];
