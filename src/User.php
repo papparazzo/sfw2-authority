@@ -174,7 +174,7 @@ class User
 
     public function isAuthenticated(): bool
     {
-        return $this->authenticated;
+        return !is_null($this->userid);
     }
 
     public function getFirstName(): string
