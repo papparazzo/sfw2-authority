@@ -66,7 +66,7 @@ class User
         if (empty($rv)) {
             throw new Exception("no user found with id <$userId>");
         }
-        $this->extracted($rv);
+        return $this->fill($rv);
     }
 
     /**
@@ -123,19 +123,14 @@ class User
         return true;
     }
 
-    public function resetPassword(string $oldPwd, string $newPwd): bool
+    public function fill(array $rv): static
     {
-        $stmt = /** @lang MySQL */
-            "SELECT `Password` " .
-            "FROM `{TABLE_PREFIX}_authority_user` " .
-            "WHERE `Id` = %s";
-
-        $oldPwdHash = $this->database->selectSingle($stmt, [$this->userid]);
-
-        if (!$this->checkPassword($this->userid, $oldPwdHash, $oldPwd)) {
-            return false;
-        }
-        return $this->resetPasswordByHash($newPwd);
+        $this->firstName = $rv['FirstName'];
+        $this->lastName = $rv['LastName'];
+        $this->mailAddr = $rv['Email'];
+        $this->userid = $rv['Id'];
+        $this->isAdmin = $rv['Admin'] == '1';
+        return $this;
     }
 
     public function resetPasswordByHash(string $newPwd): bool
