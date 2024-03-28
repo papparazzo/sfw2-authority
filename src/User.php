@@ -75,52 +75,17 @@ class User
      */
     public function loadUserByEmailAddress(string $userName): static
     {
-        $this->reset();
-        $stmt = /** @lang MySQL */
-            "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin`, " .
-            "IF(CURRENT_TIMESTAMP > `LastTry` + POW(2, `Retries`) - 1, 1, 0) AS `OnTime` " .
-            "FROM `{TABLE_PREFIX}_authority_user` " .
-            "WHERE `LoginName` LIKE %s " .
-            "AND `Active` = '1'";
-
-        $row = $this->database->selectRow($stmt, [$loginName]);
-
-        if (empty($row)) {
-            return false;
-        }
-
-        if ($row['OnTime'] == 0) {
-            return false;
-        }
-
-        if (!$this->checkPassword($row['Id'], $row['Password'], $pwd)) {
-            $this->updateRetries($row['Id'], false);
-            return false;
-        }
-
-        $this->updateRetries($row['Id'], true);
-        $this->extracted($row);
-        return true;
-    }
-
-    public function authenticateUserByHash(string $hash): bool
-    {
-        $this->reset();
         $stmt = /** @lang MySQL */
             "SELECT `Id`, `FirstName`, `LastName`, `Email`, `Password`, `Admin` " .
             "FROM `{TABLE_PREFIX}_authority_user` " .
-            "WHERE `ResetExpireDate` >= NOW() " .
-            "AND `ResetHash` = %s";
+            "WHERE `Email` = %s";
 
         $row = $this->database->selectRow($stmt, [$hash]);
 
         if (empty($row)) {
-            return false;
+            throw new Exception("no user found with login <$userName>");
         }
-
-        $this->updateRetries($row['Id'], true);
-        $this->extracted($row);
-        return true;
+        return $this->fill($row);
     }
 
     public function fill(array $rv): static
