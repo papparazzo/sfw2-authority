@@ -80,7 +80,8 @@ class User
             "FROM `{TABLE_PREFIX}_authority_user` " .
             "WHERE `Email` = %s";
 
-        $row = $this->database->selectRow($stmt, [$hash]);
+        $queryHelper = new QueryHelper($this->database);
+        $row = $queryHelper->selectRow($stmt, [$userName]);
 
         if (empty($row)) {
             throw new Exception("no user found with login <$userName>");
