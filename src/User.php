@@ -98,17 +98,11 @@ class User
         return $this;
     }
 
-    public function resetPasswordByHash(string $newPwd): bool
-    {
-        $stmt = /** @lang MySQL */
-            "UPDATE `{TABLE_PREFIX}_authority_user` " .
-            "SET `Password` = %s, `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = '' " .
-            "WHERE `Id` = %s";
+    /**
 
-        $newHash = password_hash($newPwd, PASSWORD_DEFAULT);
-        $cnt = $this->database->update($stmt, [$newHash, $this->userid]);
-        return $cnt == 1;
-    }
+     * `Active` BOOLEAN NOT NULL DEFAULT '1',
+     * `FirstName` VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL,
+     * `LastName` VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL,
 
      * `Sex` ENUM('FEMALE','MALE','DIVERSE') COLLATE utf8_unicode_ci DEFAULT NULL,
      * `Birthday` DATE DEFAULT NULL,
@@ -170,47 +164,5 @@ class User
     public function isAdmin(): bool
     {
         return $this->isAdmin;
-    }
-
-    protected function checkPassword(int $userId, string $hash, string $password): bool
-    {
-        if (!password_verify($password, $hash)) {
-            return false;
-        }
-
-        if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
-            $stmt = "UPDATE `{TABLE_PREFIX}_authority_user` SET `Password` = %s WHERE `Id` = %s ";
-            $newh = password_hash($password, PASSWORD_DEFAULT);
-            $this->database->update($stmt, [$newh, $userId]);
-        }
-        return true;
-    }
-
-    protected function updateRetries(int $loginId, bool $sucess): void
-    {
-        $stmt = "UPDATE `{TABLE_PREFIX}_authority_user` ";
-        if ($sucess) {
-            $stmt .= "SET `Retries` = 0, `ResetExpireDate` = NULL, `ResetHash` = ''";
-        } else {
-            $stmt .=
-                "SET `Active` = IF(`Retries` + 1 < " . self::MAX_RETRIES . ", 1, 0), " .
-                "`Retries` = IF(`Retries` + 1 < " . self::MAX_RETRIES . ", `Retries` + 1, 0) ";
-        }
-        $stmt .=
-            "WHERE `Id` = %s " .
-            "AND `Active` = 1 " .
-            "AND CURRENT_TIMESTAMP > `LastTry` +  POW(2, `Retries`) - 1";
-
-        $this->database->update($stmt, [$loginId]);
-    }
-
-    public function extracted(mixed $rv): void
-    {
-        $this->firstName = $rv['FirstName'];
-        $this->lastName = $rv['LastName'];
-        $this->mailAddr = $rv['Email'];
-        $this->userid = $rv['Id'];
-        $this->isAdmin = $rv['Admin'] == '1';
-        $this->authenticated = true;
     }
 }
