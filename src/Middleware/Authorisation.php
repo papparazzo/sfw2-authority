@@ -42,7 +42,7 @@ class Authorisation implements MiddlewareInterface
 
         $permission = $this->permission->checkPermission($pathId, $action);
 
-        if ($permission === AccessType::VORBIDDEN) {
+        if ($permission === AccessType::FORBIDDEN) {
             throw new HttpForbidden();
         }
 

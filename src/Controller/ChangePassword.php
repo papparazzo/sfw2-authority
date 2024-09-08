@@ -75,8 +75,8 @@ class ChangePassword extends AbstractController {
             return $this->getForm($request, $responseEngine);
         }
 
-        $rulset = new Ruleset();
-        $rulset->addNewRules(
+        $ruleset = new Ruleset();
+        $ruleset->addNewRules(
             'pwd',
             new IsNotEmpty(),
             new HasMinLength(8),
@@ -87,13 +87,13 @@ class ChangePassword extends AbstractController {
             new ContainsUpperChars(2)
         );
 
-        $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
+        $ruleset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
         if(!isset($_POST['hash'])) {
-            $rulset->addNewRules('pwd', new IsNotSameAs($_POST['oldpwd']));
-            $rulset->addNewRules('oldpwd', new IsNotEmpty());
+            $ruleset->addNewRules('pwd', new IsNotSameAs($_POST['oldpwd']));
+            $ruleset->addNewRules('oldpwd', new IsNotEmpty());
         }
 
-        $validator = new Validator($rulset);
+        $validator = new Validator($ruleset);
         $values = [];
 
         $success = $validator->validate($_POST, $values);

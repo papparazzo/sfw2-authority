@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS `{TABLE_PREFIX}_authority_permission` (
     `RoleId` INT(10) UNSIGNED NOT NULL,
     `PathId` INT(10) UNSIGNED NOT NULL,
     `Action` VARCHAR(256) NOT NULL,
-    `Access` ENUM('VORBIDDEN', 'RESTRICTED', 'FULL') COLLATE utf8_unicode_ci NOT NULL
+    `Access` ENUM('FORBIDDEN', 'RESTRICTED', 'FULL') COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 ALTER TABLE `{TABLE_PREFIX}_authority_permission` ADD UNIQUE KEY `RoleId` (`RoleId`,`PathId`,`Action`);
