@@ -28,6 +28,7 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Authority\Authenticator;
 use SFW2\Core\HttpExceptions\HttpBadRequest;
 use SFW2\Core\HttpExceptions\HttpForbidden;
+use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Routing\AbstractController;
 
@@ -68,6 +69,7 @@ class ChangePassword extends AbstractController {
      * @throws HttpBadRequest
      * @throws Exception
      * @throws HttpForbidden
+     * @throws DatabaseException
      */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
@@ -103,75 +105,81 @@ class ChangePassword extends AbstractController {
         }
 
         $newPwd = $values['pwd']['value'];
-        $oldPwd = $values['oldpwd']['value'];
-        $error = !$this->user->resetPassword($oldPwd, $newPwd);
 
-        if($error) {
-            return $this->returnError($request, $responseEngine);
+        $auth = new Authenticator($this->database);
+
+        if(isset($_POST['hash'])) {
+            $hash = (string)filter_input(INPUT_POST, 'hash');
+            $this->validateHash($hash);
+            if(!$auth->resetPasswordByHash($hash, $newPwd)) {
+                return $responseEngine->render($request, [
+                    'title' => 'Passwort ändern',
+                    'description' =>
+                        "<p>
+                            Das Passwort kann nicht zurückgesetzt werden! Dies kann mehrere Ursachen haben:
+                        </p>
+                        <ul>
+                            <li>Es wurden ungültige Daten übermittelt.</li>
+                            <li>Das Passwort wurde bereits zurückgesetzt.</li>
+                            <li>Es ist ein interner Fehler aufgetreten.</li>
+                            <li>
+                                Das Ablaufdatum wurde überschritten. 
+                                Bitte achte darauf das Du innerhalb von 
+                                <strong>" . $this->getExpireDate(self::$EXPIRE_DATE_OFFSET) . "</strong> reagierst!</li>
+                        </ul>
+                        <p>
+                            Versuche es bitte erneut. Sollte das Problem weiterhin bestehen dann melde dich bitte.
+                        </p>",
+                    'reload' => true
+                ]);
+            }
+        } else {
+            $userId = $this->session->getGlobalEntry(User::class);
+            if(is_null($userId)) {
+                throw new HttpForbidden();
+            }
+            $user = (new User($this->database))->loadUserById($userId);
+            if(!$user->isAuthenticated()) {
+                throw new HttpForbidden();
+            }
+            $oldPwd = $values['oldpwd']['value'];
+            if(!$auth->resetPasswordByUser($userId, $oldPwd, $newPwd)) {
+                return $this->returnError($request, $responseEngine);
+            }
         }
 
-        return $responseEngine->render($request);
-    }
-
-    public function confirm(Request $request, ResponseEngine $responseEngine): Response
-    {
-        $hash = (string)filter_input(INPUT_GET, 'hash');
-        $error = !$this->user->authenticateUserByHash($hash);
-
-        $this->session->setGlobalEntry(User::class, $this->user->getUserId());
-        $this->session->regenerateSession();
-
-        if($error) {
-            return $responseEngine->render(
-                request: $request,
-                data: ['expire' => $this->getExpireDate(self::$EXPIRE_DATE_OFFSET)],
-                template: "SFW2\\Authority\\ChangePassword\\ResetError"
-            );
-        }
-
-        $this->session->setPathEntry('hash', $hash);
-
-        return $responseEngine->render(
-            request: $request,
-            data: ['hash' => $hash],
-            template: "SFW2\\Authority\\ChangePassword\\ChangePassword"
-        );
+        return $responseEngine->render($request, [
+            'title' => 'Passwort ändern',
+            'description' => 'Dein Passwort wurde erfolgreich geändert',
+            'reload' => false
+        ]);
     }
 
     /**
-     * @throws HttpForbidden
+     * @throws HttpBadRequest
      */
-    public function changePassword(Request $request, ResponseEngine $responseEngine): Response
+    private function validateHash(string $hash): void
     {
-        $hash = filter_input(INPUT_POST, 'hash');
+        if(preg_match('/^[0-9a-f.]+$/', $hash) !== 1) {
+            throw new HttpBadRequest();
+        }
+    }
 
-        if($hash != '' && $this->session->getPathEntry('hash', '') != $hash) {
-            throw new HttpForbidden();
+    /**
+     * @throws HttpBadRequest
+     */
+    private function getForm(Request $request, ResponseEngine $responseEngine): Response
+    {
+        if(!isset($request->getQueryParams()['hash'])) {
+            return $responseEngine->render($request, [], 'SFW2\\Authority\\ChangePassword\\ChangePassword');
         }
 
-        $rulset = new Ruleset();
-        $rulset->addNewRules('pwd', new IsNotEmpty(), new IsSameAs($_POST['pwdr']));
-        $rulset->addNewRules('pwdr', new IsNotEmpty(), new IsSameAs($_POST['pwd']));
+        $hash = $request->getQueryParams()['hash'];
+        $this->validateHash($hash);
 
-        $validator = new Validator($rulset);
-        $values = [];
-
-        $error = !$validator->validate($_POST, $values);
-
-        if($error) {
-            $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
-            return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
-        }
-
-        $newPwd = $values['pwd']['value'];
-        $this->session->delPathEntry('hash');
-        $error = !$this->user->resetPasswordByHash($newPwd);
-
-        if($error) {
-            return $this->returnError($request, $responseEngine);
-        }
-
-        return $responseEngine->render($request);
+        return $responseEngine->render(
+            $request, ['hash' => $hash], 'SFW2\\Authority\\ChangePassword\\ChangePassword'
+        );
     }
 
     protected function returnError(Request $request, ResponseEngine $responseEngine): Response
