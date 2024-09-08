@@ -123,41 +123,20 @@ final class Permission implements PermissionInterface
             return AccessType::FULL;
         }
 
-        foreach ($this->permissions[$pathId] as $k => $v) {
-            if($k == $action) {
-                return AccessType::getByName($v);
-            }
-        }
-
-        /* FIXME Match with regular expre.
-        foreach ($this->permissions[$pathId] as $k => $v) {
-            if($k == $action) {
-                return $v != 'NONE'; // Best Match!
-            }
-        }
-
-         final public const ACTION_VORBIDDEN = '';
-
-    final public const ACTION_ALL = '*';
-
-    final public const ACTION_CREATE = 'create*';
-
-    final public const ACTION_READ = 'read*';
-
-    final public const ACTION_UPDATE = 'update*';
-
-    final public const ACTION_DELETE = 'delete*';
-
-        */
-
-
-
+        $rv = AccessType::FORBIDDEN;
 
         foreach ($this->permissions[$pathId] as $k => $v) {
             if($k == '*') {
+                $rv = AccessType::getByName($v);
+            }
+        }
+
+        foreach ($this->permissions[$pathId] as $k => $v) {
+            if($k == $action) {
                 return AccessType::getByName($v);
             }
         }
-        return AccessType::VORBIDDEN;
+
+        return $rv;
     }
 }
