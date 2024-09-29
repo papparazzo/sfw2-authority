@@ -22,6 +22,9 @@
     "repositories" : [
         {
             "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-exception.git"
+        }, {
+            "type": "vcs",
             "url": "https://github.com/papparazzo/sfw2-database.git"
         }, {
             "type": "vcs",
