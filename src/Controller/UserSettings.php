@@ -107,13 +107,13 @@ final class UserSettings extends AbstractController {
 
         foreach($rows as $row) {
            # $entry = [];
-           # $entry['delete_allowed'] = true; # $deleteAllowed !== AccessType::VORBIDDEN;
+           # $entry['delete_allowed'] = true; # $deleteAllowed !== AccessType::FORBIDDEN;
            # $entries[] = $entry;
         }
 
         return [
             'entries' => $rows,
-            'create_allowed' => true #$this->permission->checkPermission($pathId, 'create') !== AccessType::VORBIDDEN
+            'create_allowed' => true #$this->permission->checkPermission($pathId, 'create') !== AccessType::FORBIDDEN
         ];
     }
 
