@@ -29,13 +29,13 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 
 use SFW2\Authority\Authenticator;
 use SFW2\Authority\User;
+use SFW2\Core\Interfaces\PathMapInterface;
+use SFW2\Core\Mailer\MailerInterface;
 use SFW2\Core\Utils\DateTimeHelper;
-use SFW2\Core\Utils\Mailer;
 
 use SFW2\Database\DatabaseInterface;
 
 use SFW2\Routing\AbstractController;
-use SFW2\Routing\PathMap\PathMapInterface;
 use SFW2\Routing\ResponseEngine;
 
 use SFW2\Validator\Ruleset;
@@ -56,7 +56,7 @@ class ResetPassword extends AbstractController
     public function __construct(
         private readonly DatabaseInterface $database,
         private readonly DateTimeHelper $dateTimeHelper,
-        private readonly Mailer $mailer,
+        private readonly MailerInterface $mailer,
         PathMapInterface $path,
         int $loginChangePathId
     )
