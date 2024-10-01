@@ -21,23 +21,8 @@
     },
     "repositories" : [
         {
-            "type": "vcs",
-            "url": "https://github.com/papparazzo/sfw2-exception.git"
-        }, {
-            "type": "vcs",
-            "url": "https://github.com/papparazzo/sfw2-database.git"
-        }, {
-            "type": "vcs",
-            "url": "https://github.com/papparazzo/sfw2-core.git"
-        }, {
-            "type": "vcs",
-            "url": "https://github.com/papparazzo/sfw2-session.git"
-        }, {
-            "type": "vcs",
-            "url": "https://github.com/papparazzo/sfw2-routing.git"
-        }, {
-            "type": "vcs",
-            "url": "https://github.com/papparazzo/sfw2-validator.git"
+            "type": "composer",
+            "url": "https://packages.fabienne.pro"
         }
     ]
 }
