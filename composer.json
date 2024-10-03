@@ -3,6 +3,14 @@
     "type": "library",
     "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
 
+    "keywords": ["framework", "micro"],
+    "authors": [
+        {
+            "name": "Stefan Paproth",
+            "email": "pappi-@gmx.de"
+        }
+    ],
+
     "require": {
         "php": "^8.3",
 
