@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS `{TABLE_PREFIX}_authority_user` (
     `PostalCode` VARCHAR(25) COLLATE utf8_unicode_ci NOT NULL,
     `City` VARCHAR(25) COLLATE utf8_unicode_ci NOT NULL,
     `Password` VARCHAR(255) COLLATE utf8_unicode_ci NOT NULL,
-    `Retries` TINYINT(11) NOT NULL,
+    `Retries` TINYINT(11) NOT NULL DEFAULT 0,
     `LastTry` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `ResetExpireDate` datetime DEFAULT NULL,
     `ResetHash` VARCHAR(32) COLLATE utf8_unicode_ci NOT NULL
