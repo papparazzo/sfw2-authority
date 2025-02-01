@@ -35,8 +35,9 @@ class Authenticator
 {
     private const MAX_RETRIES = 100;
 
-    public function __construct(protected readonly DatabaseInterface $database)
-    {
+    public function __construct(
+        protected readonly DatabaseInterface $database
+    ) {
     }
 
     /**
