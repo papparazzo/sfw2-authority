@@ -39,8 +39,7 @@ final class Authentication extends AbstractController
         protected SessionInterface  $session,
         protected DatabaseInterface $database,
         protected ?string           $loginResetPath = null
-    )
-    {
+    ) {
     }
 
     /**
