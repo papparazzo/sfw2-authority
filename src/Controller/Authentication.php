@@ -22,35 +22,54 @@
 
 namespace SFW2\Authority\Controller;
 
-use Exception;
 use Fig\Http\Message\StatusCodeInterface;
+use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Authority\Authenticator;
+use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
-use SFW2\Routing\AbstractController;
 use SFW2\Authority\User;
-use SFW2\Routing\ResponseEngine;
+use SFW2\Render\RenderInterface;
 use SFW2\Session\SessionInterface;
+use SFW2\Validator\Exception;
 
-final class Authentication extends AbstractController
+final class Authentication
 {
     public function __construct(
         protected SessionInterface  $session,
         protected DatabaseInterface $database,
+        private readonly RenderInterface  $render,
         protected ?string           $loginResetPath = null
     ) {
     }
 
     /**
      * @throws Exception
+     * @throws DatabaseException
      */
-    public function index(Request $request, ResponseEngine $responseEngine): Response
+    public function getLogin(Request $request, Response $response, array $data): Response
     {
-        if(isset($request->getQueryParams()['getForm'])) {
-            return $responseEngine->render($request, [], 'SFW2\\Authority\\Authentication\\LoginForm');
+        $userId = $this->session->getGlobalEntry(User::class);
+
+        $user = (new User($this->database))->loadUserById($userId);
+
+        if (!$user->isAuthenticated()) {
+            return $this->render->render($request, $response, [], 'SFW2\\Authority\\Authentication\\LoginForm');
         }
 
+        $data = [
+            'user_name' => $user->getFullName()
+        ];
+        return $this->render->render($request, $response, $data, 'SFW2\\Authority\\Authentication\\LogoutForm');
+    }
+
+    /**
+     * @throws DatabaseException
+     */
+    public function postLogin(Request $request, Response $response, array $data): Response
+    {
         $auth = new Authenticator($this->database);
         $user = $auth->authenticateUser(
             (string)filter_input(INPUT_POST, 'usr'),
@@ -60,7 +79,7 @@ final class Authentication extends AbstractController
         if (!$user->isAuthenticated()) {
             $values['pwd']['hint'] = 'Es wurden ungültige Daten übermittelt!';
             $values['usr']['hint'] = ' ';
-            $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+            $response = $this->render->render($request, $response, ['sfw2_payload' => $values]);
             return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
@@ -73,28 +92,37 @@ final class Authentication extends AbstractController
         $data['authenticated'] = $user->isAuthenticated();
 
         $request = $request->withAttribute('sfw2_authority', $data);
-        return $responseEngine->render($request, [
-            'title' => 'Anmelden',
-            'description' =>
-                "Hallo <strong>{$user->getFirstName()}</strong>,<br />
-                du wurdest erfolgreich angemeldet. Zum Abmelden klicke bitte oben rechts auf <strong>abmelden</strong>",
-            'reload' => true
-        ]);
+        return
+            $this->render->render(
+                $request,
+                $response,
+                [
+                    'title' => 'Anmelden',
+                    'description' => "
+                        Hallo <strong>{$user->getFirstName()}</strong>,<br />
+                        du wurdest erfolgreich angemeldet. 
+                        Zum Abmelden klicke bitte oben rechts auf <strong>abmelden</strong>
+                    ",
+                    'reload' => true
+                ]
+            );
     }
 
-    public function logout(Request $request, ResponseEngine $responseEngine): Response
+    public function postLogout(Request $request, Response $response, array $data): Response
     {
-        if(isset($request->getQueryParams()['getForm'])) {
-            return $responseEngine->render($request, [], 'SFW2\\Authority\\Authentication\\LogoutForm');
-        }
-
         $this->session->delGlobalEntry(User::class);
         $this->session->regenerateSession();
-        return $responseEngine->render($request, [
-            'title' => 'Abmelden',
-            'description' =>
-                'Du wurdest erfolgreich abgemeldet. Um dich erneut anzumelden klicke bitte oben rechts auf Login.',
-            'reload' => true
-        ]);
+        return
+            $this->render->render(
+                $request,
+                $response,
+                [
+                    'title' => 'Abmelden',
+                    'description' =>
+                        'Du wurdest erfolgreich abgemeldet. ' .
+                        'Um dich erneut anzumelden klicke bitte oben rechts auf Login.',
+                    'reload' => true
+                ]
+            );
     }
 }

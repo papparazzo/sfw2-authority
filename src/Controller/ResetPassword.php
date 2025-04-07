@@ -35,8 +35,7 @@ use SFW2\Core\Utils\DateTimeHelper;
 
 use SFW2\Database\DatabaseInterface;
 
-use SFW2\Routing\AbstractController;
-use SFW2\Routing\ResponseEngine;
+use SFW2\Render\RenderInterface;
 
 use SFW2\Validator\Ruleset;
 use SFW2\Validator\Validator;
@@ -47,7 +46,7 @@ use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Authority\Helper\LoginHelperTrait;
 use Throwable;
 
-class ResetPassword extends AbstractController
+class ResetPassword
 {
     use LoginHelperTrait;
 
@@ -57,6 +56,7 @@ class ResetPassword extends AbstractController
         private readonly DatabaseInterface $database,
         private readonly DateTimeHelper $dateTimeHelper,
         private readonly MailerInterface $mailer,
+        private readonly RenderInterface $render,
         PathMapInterface $path,
         int $loginChangePathId
     )
@@ -67,10 +67,10 @@ class ResetPassword extends AbstractController
     /**
      * @throws Exception
      */
-    public function index(Request $request, ResponseEngine $responseEngine): Response
+    public function index(Request $request, Response $response): Response
     {
         if(isset($request->getQueryParams()['getForm'])) {
-            return $responseEngine->render($request, [], 'SFW2\\Authority\\ResetPassword\\ResetPasswordForm');
+            return $this->render->render($request, $response, [], 'SFW2\\Authority\\ResetPassword\\ResetPasswordForm');
         }
 
         $ruleset = new Ruleset();
@@ -81,7 +81,7 @@ class ResetPassword extends AbstractController
 
         $error = !$validator->validate($_POST, $values);
 
-        $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+        $response = $this->render->render($request, $response, ['sfw2_payload' => $values]);
 
         if ($error) {
             return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
@@ -94,13 +94,13 @@ class ResetPassword extends AbstractController
         $hash = $auth->getHash($user, $time);
 
         if(is_null($hash)) {
-            return $this->returnError($request, $responseEngine);
+            return $this->returnError($request, $response);
         }
 
         try {
             $user = (new User($this->database))->loadUserByEmailAddress($user);
         } catch(Throwable) {
-            return $this->returnError($request, $responseEngine);
+            return $this->returnError($request, $response);
         }
 
         $expireDate = $this->getExpireDate(self::$EXPIRE_DATE_OFFSET);
@@ -125,7 +125,7 @@ class ResetPassword extends AbstractController
             $data
         );
 
-        return $responseEngine->render($request, [
+        return $this->render->render($request, $response, [
             'title' => 'Passwort rücksetzen',
             'description' => "
                 <p>
@@ -145,7 +145,7 @@ class ResetPassword extends AbstractController
         ]);
     }
 
-    protected function returnError(Request $request, ResponseEngine $responseEngine): Response
+    protected function returnError(Request $request, Response $response): Response
     {
         $values = [
             'user' => [
@@ -153,7 +153,7 @@ class ResetPassword extends AbstractController
                 'value' => ''
             ]
         ];
-        $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+        $response = $this->render->render($request, $response, ['sfw2_payload' => $values]);
         return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
     }
 }
