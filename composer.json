@@ -1,7 +1,7 @@
 {
     "name": "sfw2/authority",
     "type": "library",
-    "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3",
+    "license": "AGPL-3.0-or-later",
 
     "keywords": ["framework", "micro"],
     "authors": [
@@ -14,11 +14,13 @@
     "require": {
         "php": "^8.3",
 
+        "psr/http-message": "^2.0",
+
         "sfw2/validator": "^6.0",
-        "sfw2/core": "^7.0",
-        "sfw2/routing": "^8.0",
+        "sfw2/core": "^9.0",
         "sfw2/database": "^4.0",
-        "sfw2/session": "^4.0",
+        "sfw2/session": "^5.0",
+        "sfw2/render": "^1.0",
 
         "psr/http-server-middleware": "^1.0.2"
     },
@@ -29,8 +31,8 @@
     },
     "repositories" : [
         {
-            "type": "composer",
-            "url": "https://packages.fabienne.pro"
+            "type": "vcs",
+            "url": "https://github.com/papparazzo/sfw2-core.git"
         }
     ]
 }
