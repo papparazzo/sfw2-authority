@@ -26,11 +26,11 @@ use Fig\Http\Message\StatusCodeInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use SFW2\Authority\Authenticator;
-use SFW2\Core\HttpExceptions\HttpBadRequest;
-use SFW2\Core\HttpExceptions\HttpForbidden;
 use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
-use SFW2\Routing\AbstractController;
+use SFW2\Exception\HttpExceptions\Status4xx\HttpStatus400BadRequest;
+use SFW2\Exception\HttpExceptions\Status4xx\HttpStatus403Forbidden;
+use SFW2\Render\RenderInterface;
 
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
@@ -67,8 +67,8 @@ class ChangePassword extends AbstractController {
      * @return Response
      * @throws HttpBadRequest
      * @throws Exception
-     * @throws HttpForbidden
-     * @throws DatabaseException
+     * @throws HttpStatus400BadRequest
+     * @throws HttpStatus403Forbidden
      */
     public function index(Request $request, ResponseEngine $responseEngine): Response
     {
@@ -135,11 +135,11 @@ class ChangePassword extends AbstractController {
         } else {
             $userId = $this->session->getGlobalEntry(User::class);
             if(is_null($userId)) {
-                throw new HttpForbidden();
+                throw new HttpStatus403Forbidden();
             }
             $user = (new User($this->database))->loadUserById($userId);
             if(!$user->isAuthenticated()) {
-                throw new HttpForbidden();
+                throw new HttpStatus403Forbidden();
             }
             $oldPwd = $values['oldpwd']['value'];
             if(!$auth->resetPasswordByUser($userId, $oldPwd, $newPwd)) {
@@ -155,17 +155,17 @@ class ChangePassword extends AbstractController {
     }
 
     /**
-     * @throws HttpBadRequest
+     * @throws HttpStatus400BadRequest
      */
     private function validateHash(string $hash): void
     {
         if(preg_match('/^[0-9a-f.]+$/', $hash) !== 1) {
-            throw new HttpBadRequest();
+            throw new HttpStatus400BadRequest();
         }
     }
 
     /**
-     * @throws HttpBadRequest
+     * @throws HttpStatus400BadRequest
      */
     private function getForm(Request $request, ResponseEngine $responseEngine): Response
     {
