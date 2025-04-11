@@ -25,48 +25,42 @@ namespace SFW2\Authority\Controller;
 use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use SFW2\Core\Permission\AccessType;
 use SFW2\Database\DatabaseInterface;
-use SFW2\Routing\AbstractController;
-use SFW2\Routing\ResponseEngine;
+use SFW2\Render\RenderInterface;
 
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
 
 use SFW2\Session\SessionInterface;
-use SFW2\Validator\Ruleset;
-use SFW2\Validator\Validator;
-use SFW2\Validator\Validators\IsNotEmpty;
-use SFW2\Validator\Validators\IsSameAs;
 
-final class UserSettings extends AbstractController {
+final class UserSettings {
 
     use LoginHelperTrait;
 
     public function __construct(
         private readonly DatabaseInterface $database,
-        private readonly SessionInterface $session
-    )
-    {
+        private readonly SessionInterface $session,
+        private readonly RenderInterface $render,
+    ) {
     }
 
     /**
      * @throws Exception
      */
-    public function index(Request $request, ResponseEngine $responseEngine): Response
+    public function index(Request $request, Response $response): Response
     {
         if(isset($request->getQueryParams()['getForm'])) {
-            return $responseEngine->render(
+            return $this->render->render(
                 $request,
+                $response,
                 $this->getRow(),
                 "SFW2\\Authority\\UserSettings\\UserSettings"
             );
         }
 
-
-
-        return $responseEngine->render(
+        return $this->render->render(
             $request,
+            $response,
             $this->getEntries(),
             template: "SFW2\\Authority\\UserSettings\\Users"
         );
