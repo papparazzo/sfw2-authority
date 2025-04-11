@@ -35,8 +35,6 @@ use SFW2\Render\RenderInterface;
 use SFW2\Authority\User;
 use SFW2\Authority\Helper\LoginHelperTrait;
 
-use SFW2\Routing\HelperTraits\getRequestTypeTrait;
-use SFW2\Routing\ResponseEngine;
 use SFW2\Session\SessionInterface;
 use SFW2\Validator\Exception;
 use SFW2\Validator\Ruleset;
@@ -50,30 +48,33 @@ use SFW2\Validator\Validators\IsNotEmpty;
 use SFW2\Validator\Validators\IsNotSameAs;
 use SFW2\Validator\Validators\IsSameAs;
 
-class ChangePassword extends AbstractController {
+class ChangePassword
+{
 
     use LoginHelperTrait;
-    use getRequestTypeTrait;
 
     public function __construct(
         private readonly DatabaseInterface $database,
-        private readonly SessionInterface $session
+        private readonly SessionInterface $session,
+        private readonly RenderInterface $render
     ) {
     }
 
     /**
      * @param Request $request
-     * @param ResponseEngine $responseEngine
+     * @param Response $response
+     * @param array $data
      * @return Response
-     * @throws HttpBadRequest
+     * @throws DatabaseException
      * @throws Exception
      * @throws HttpStatus400BadRequest
      * @throws HttpStatus403Forbidden
      */
-    public function index(Request $request, ResponseEngine $responseEngine): Response
+    public function index(Request $request, Response $response, array $data): Response
     {
-        if($this->isFormRequest($request)) {
-            return $this->getForm($request, $responseEngine);
+        $data = $request->getQueryParams();
+        if(isset($data['getForm'])) {
+            return $this->getForm($request, $response);
         }
 
         $ruleset = new Ruleset();
@@ -99,7 +100,7 @@ class ChangePassword extends AbstractController {
 
         $success = $validator->validate($_POST, $values);
         if(!$success) {
-            $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+            $response = $this->render->render($request, $response, ['sfw2_payload' => $values]);
             return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
         }
 
@@ -111,7 +112,7 @@ class ChangePassword extends AbstractController {
             $hash = (string)filter_input(INPUT_POST, 'hash');
             $this->validateHash($hash);
             if(!$auth->resetPasswordByHash($hash, $newPwd)) {
-                return $responseEngine->render($request, [
+                return $this->render->render($request, $response, [
                     'title' => 'Passwort ändern',
                     'description' =>
                         "<p>
@@ -143,11 +144,11 @@ class ChangePassword extends AbstractController {
             }
             $oldPwd = $values['oldpwd']['value'];
             if(!$auth->resetPasswordByUser($userId, $oldPwd, $newPwd)) {
-                return $this->returnError($request, $responseEngine);
+                return $this->returnError($request, $response);
             }
         }
 
-        return $responseEngine->render($request, [
+        return $this->render->render($request, $response, [
             'title' => 'Passwort ändern',
             'description' => 'Dein Passwort wurde erfolgreich geändert',
             'reload' => false
@@ -167,21 +168,21 @@ class ChangePassword extends AbstractController {
     /**
      * @throws HttpStatus400BadRequest
      */
-    private function getForm(Request $request, ResponseEngine $responseEngine): Response
+    private function getForm(Request $request, Response $response): Response
     {
         if(!isset($request->getQueryParams()['hash'])) {
-            return $responseEngine->render($request, [], 'SFW2\\Authority\\ChangePassword\\ChangePassword');
+            return $this->render->render($request, $response, [], 'SFW2\\Authority\\ChangePassword\\ChangePassword');
         }
 
         $hash = $request->getQueryParams()['hash'];
         $this->validateHash($hash);
 
-        return $responseEngine->render(
-            $request, ['hash' => $hash], 'SFW2\\Authority\\ChangePassword\\ChangePassword'
+        return $this->render->render(
+            $request, $response, ['hash' => $hash], 'SFW2\\Authority\\ChangePassword\\ChangePassword'
         );
     }
 
-    protected function returnError(Request $request, ResponseEngine $responseEngine): Response
+    protected function returnError(Request $request, Response $response): Response
     {
         $values = [
             'oldpwd' => [
@@ -197,7 +198,7 @@ class ChangePassword extends AbstractController {
                 'value' => ''
             ]
         ];
-        $response = $responseEngine->render($request, ['sfw2_payload' => $values]);
+        $response = $this->render->render($request, $response, ['sfw2_payload' => $values]);
         return $response->withStatus(StatusCodeInterface::STATUS_UNPROCESSABLE_ENTITY);
     }
 }
