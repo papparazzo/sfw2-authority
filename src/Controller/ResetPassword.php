@@ -59,8 +59,7 @@ class ResetPassword
         private readonly RenderInterface $render,
         PathMapInterface $path,
         int $loginChangePathId
-    )
-    {
+    ) {
         $this->loginChangePath = $path->getPath($loginChangePathId);
     }
 

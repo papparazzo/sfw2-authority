@@ -39,8 +39,9 @@ class User
 
     protected string $mailAddr    = '';
 
-    public function __construct(protected readonly DatabaseInterface $database)
-    {
+    public function __construct(
+        protected readonly DatabaseInterface $database
+    ) {
     }
 
     /**

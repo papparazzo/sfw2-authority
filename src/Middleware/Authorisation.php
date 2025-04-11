@@ -26,8 +26,7 @@ class Authorisation implements MiddlewareInterface
         private readonly PermissionInterface $permission,
         private readonly SessionInterface    $session,
         private readonly DatabaseInterface   $database
-    )
-    {
+    ) {
     }
 
     /**
