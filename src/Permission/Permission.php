@@ -22,12 +22,13 @@
 
 namespace SFW2\Authority\Permission;
 
-use SFW2\Authority\User;
 use SFW2\Core\Permission\AccessType;
 use SFW2\Core\Permission\PermissionInterface;
 use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Database\QueryHelper;
+use SFW2\Interoperability\User\UserEntity;
+use SFW2\Interoperability\User\UserRepositoryInterface;
 use SFW2\Session\SessionInterface;
 
 final class Permission implements PermissionInterface
@@ -41,11 +42,12 @@ final class Permission implements PermissionInterface
      */
     public function __construct(
         SessionInterface $session,
-        private readonly DatabaseInterface $database
+        private readonly DatabaseInterface $database,
+        private readonly UserRepositoryInterface $userRepository
     ) {
-        $userId = $session->getGlobalEntry(User::class);
+        $userId = $session->getEntry(UserEntity::class);
 
-        $this->isAdmin = (new User($this->database, $userId))->isAdmin();
+        $this->isAdmin = $this->userRepository->loadUserById($userId)->isAdmin();
 
         if ($this->isAdmin) {
             return;
