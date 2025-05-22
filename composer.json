@@ -15,14 +15,19 @@
         "php": "^8.3",
 
         "psr/http-message": "^2.0",
+        "psr/http-server-middleware": "^1.0.2",
 
-        "sfw2/validator": "^6.0",
+        "sfw2/validator": "^7.0",
         "sfw2/core": "^9.0",
+        "sfw2/interoperability": "^1.0",
+        "sfw2/exception": "^2.0",
         "sfw2/database": "^4.0",
-        "sfw2/session": "^5.0",
-        "sfw2/render": "^1.0",
-
-        "psr/http-server-middleware": "^1.0.2"
+        "sfw2/session": "^7.0",
+        "sfw2/render": "^1.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^1.10",
+        "squizlabs/php_codesniffer": "^3.11"
     },
     "autoload": {
         "psr-4": {
