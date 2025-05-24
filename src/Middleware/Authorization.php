@@ -1,6 +1,6 @@
 <?php
 
-namespace SFW2\Authority\Middleware;
+namespace SFW2\Authorization\Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
@@ -18,7 +18,7 @@ use SFW2\Routing\HelperTraits\getRoutingDataTrait;
 use SFW2\Session\SessionInterface;
 use SFW2\Validator\Exception;
 
-class Authorisation implements MiddlewareInterface
+final class Authorization implements MiddlewareInterface
 {
     use getRoutingDataTrait;
 

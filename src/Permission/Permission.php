@@ -20,7 +20,7 @@
  *
  */
 
-namespace SFW2\Authority\Permission;
+namespace SFW2\Authorization\Permission;
 
 use SFW2\Core\Permission\AccessType;
 use SFW2\Core\Permission\PermissionInterface;

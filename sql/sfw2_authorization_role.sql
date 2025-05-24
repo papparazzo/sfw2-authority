@@ -21,15 +21,17 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
-CREATE TABLE IF NOT EXISTS `{TABLE_PREFIX}_authority_user_role` (
-    `UserId` int(10) UNSIGNED NULL,
-    `RoleId` int(10) UNSIGNED NOT NULL
+CREATE TABLE IF NOT EXISTS `{TABLE_PREFIX}_authorization_role` (
+    `Id` INT(11) UNSIGNED NOT NULL,
+    `Name` VARCHAR(256) NOT NULL,
+    `Description` TEXT NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-ALTER TABLE `{TABLE_PREFIX}_authority_user_role` ADD UNIQUE KEY `key` (`UserId`,`RoleId`);
+ALTER TABLE `{TABLE_PREFIX}_authorization_role` ADD PRIMARY KEY (`Id`);
+ALTER TABLE `{TABLE_PREFIX}_authorization_role` MODIFY `Id` int(11) UNSIGNED NOT NULL AUTO_INCREMENT;
 
-INSERT INTO `{TABLE_PREFIX}_authority_user_role` (`UserId`, `RoleId`) VALUES
-(NULL, 1),
-(1, 2);
+INSERT INTO `{TABLE_PREFIX}_authorization_role` (`Id`, `Name`, `Description`) VALUES
+(1, 'Webseitenbetrachter', 'Keine Anmeldung'),
+(2, 'Leitung', 'Können bestimmte Seiten editieren');
 
--- TODO Do not vorget colations
+

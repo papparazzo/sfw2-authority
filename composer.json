@@ -1,5 +1,5 @@
 {
-    "name": "sfw2/authority",
+    "name": "sfw2/authorization",
     "type": "library",
     "license": "AGPL-3.0-or-later",
 
@@ -31,7 +31,7 @@
     },
     "autoload": {
         "psr-4": {
-            "SFW2\\Authority\\": "src/"
+            "SFW2\\Authorization\\": "src/"
         }
     },
     "repositories" : [

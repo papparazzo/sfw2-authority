@@ -20,7 +20,7 @@
  *
  */
 
-namespace SFW2\Authority\Controller;
+namespace SFW2\Authorization\Controller;
 
 use Exception;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -54,7 +54,7 @@ final class UserSettings {
                 $request,
                 $response,
                 $this->getRow(),
-                "SFW2\\Authority\\UserSettings\\UserSettings"
+                "SFW2\\Authorization\\UserSettings\\UserSettings"
             );
         }
 
@@ -62,7 +62,7 @@ final class UserSettings {
             $request,
             $response,
             $this->getEntries(),
-            template: "SFW2\\Authority\\UserSettings\\Users"
+            template: "SFW2\\Authorization\\UserSettings\\Users"
         );
 
 

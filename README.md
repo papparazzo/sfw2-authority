@@ -1,4 +1,4 @@
-# sfw2-authority
+# sfw2-authorization
 
-authorization/authentication - module
+authorization - module
 
