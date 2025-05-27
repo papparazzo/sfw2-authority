@@ -41,19 +41,17 @@ final class Permission implements PermissionInterface
      * @throws DatabaseException
      */
     public function __construct(
-        SessionInterface $session,
+        readonly UserEntity $user,
         private readonly DatabaseInterface $database,
         private readonly UserRepositoryInterface $userRepository
     ) {
-        $userId = $session->getEntry(UserEntity::class);
-
-        $this->isAdmin = $this->userRepository->loadUserById($userId)->isAdmin();
+        $this->isAdmin = $user->isAdmin();
 
         if ($this->isAdmin) {
             return;
         }
 
-        $roles = $this->getRoles($userId);
+        $roles = $this->getRoles($user->getUserId());
         $this->loadPermissions(0, $this->getInitPermission($roles), $roles);
     }
 
