@@ -18,8 +18,7 @@
         "psr/http-server-middleware": "^1.0.2",
 
         "sfw2/validator": "^7.0",
-        "sfw2/core": "^9.0",
-        "sfw2/interoperability": "^1.0",
+        "sfw2/interoperability": "^2.0",
         "sfw2/exception": "^2.0",
         "sfw2/database": "^4.0",
         "sfw2/session": "^7.0",
