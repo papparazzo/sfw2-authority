@@ -27,9 +27,10 @@ use SFW2\Core\Permission\PermissionInterface;
 use SFW2\Database\DatabaseException;
 use SFW2\Database\DatabaseInterface;
 use SFW2\Database\QueryHelper;
+use SFW2\Interoperability\Path\MethodType;
+use SFW2\Interoperability\Path\PathTreeInterface;
+use SFW2\Interoperability\PermissionInterface;
 use SFW2\Interoperability\User\UserEntity;
-use SFW2\Interoperability\User\UserRepositoryInterface;
-use SFW2\Session\SessionInterface;
 
 final class Permission implements PermissionInterface
 {
@@ -43,7 +44,7 @@ final class Permission implements PermissionInterface
     public function __construct(
         readonly UserEntity $user,
         private readonly DatabaseInterface $database,
-        private readonly UserRepositoryInterface $userRepository
+        private readonly PathTreeInterface $pathTree,
     ) {
         $this->isAdmin = $user->isAdmin();
 
@@ -76,6 +77,8 @@ final class Permission implements PermissionInterface
     }
 
     /**
+     * @param int[] $roles
+     * @return array<string, bool>
      * @throws DatabaseException
      */
     private function getInitPermission(array $roles): array
@@ -91,49 +94,48 @@ final class Permission implements PermissionInterface
     }
 
     /**
+     * @param int $parentPathId
+     * @param array<string, bool> $initPermission
+     * @param int[] $roles
+     * @return void
      * @throws DatabaseException
      */
-    private function loadPermissions(int $parentPathId, $initPermission, array $roles): void
+    private function loadPermissions(int $parentPathId, array $initPermission, array $roles): void
     {
-        $stmt = /** @lang MySQL */
-            "SELECT `Id` " .
-            "FROM `{TABLE_PREFIX}_path` " .
-            "WHERE `ParentPathId` = %s";
-
-        $rows = $this->database->select($stmt, [$parentPathId]);
+        $children = $this->pathTree->getChildren($parentPathId);
 
         $queryHelper = new QueryHelper($this->database);
 
-        foreach ($rows as $row) {
+        foreach ($children as $pathId) {
              $subRow = $queryHelper->selectKeyValue(
                 'Action',
                 'Access',
                 '{TABLE_PREFIX}_authority_permission',
-                ['PathId' => $row['Id'], 'RoleId' => $roles]
+                ['PathId' => $pathId, 'RoleId' => $roles]
             );
             $permission = array_merge($initPermission, $subRow);
-            $this->permissions[$row['Id']] = $permission;
-            $this->loadPermissions($row['Id'], $permission, $roles);
+            $this->permissions[$pathId] = $permission;
+            $this->loadPermissions($pathId, $permission, $roles);
         }
     }
 
-    public function checkPermission(int $pathId, string $action): AccessType
+    public function hasPermission(int $pathId, MethodType $method = MethodType::GET): bool
     {
         if ($this->isAdmin) {
-            return AccessType::FULL;
+            return true;
         }
 
-        $rv = AccessType::FORBIDDEN;
+        $rv = false;
 
         foreach ($this->permissions[$pathId] as $k => $v) {
-            if($k == '*') {
-                $rv = AccessType::getByName($v);
+            if($k == 'ANY') {
+                $rv = (bool)$v;
             }
         }
 
         foreach ($this->permissions[$pathId] as $k => $v) {
-            if($k == $action) {
-                return AccessType::getByName($v);
+            if($k == $method) {
+                return (bool)$v;
             }
         }
 
